@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../../libs/vue.js"></script>
+		<script src="../../../plugins/elementUI/index.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					用油统计
+				</div>
+				<div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					图表分析
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="driver" label="司机" width="50"></el-table-column>
+						<el-table-column prop="lpn" label="车牌号" width="80"></el-table-column>
+						<el-table-column prop="oilCode" label="油品" width="80"> </el-table-column>
+						<el-table-column prop="oilNum" label="加油量" width="100"></el-table-column>
+						<el-table-column prop="payMoney" label="金额" width="100"></el-table-column>
+						<el-table-column prop="createTime" label="加油时间" width="120"></el-table-column>
+
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;">
+
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="oil" label="油品" width="80"></el-table-column>
+						<el-table-column prop="tankHeight" label="罐高" width="80"> </el-table-column>
+						<el-table-column prop="tankMaxCapacity" label="最大罐容" width="100"></el-table-column>
+						<el-table-column prop="tankCapacityPercentage" label="罐容率(%)" width="100"></el-table-column>
+						<el-table-column prop="levelNo" label="液位控制器编号" width="120"></el-table-column>
+						<el-table-column prop="intelligentModuleNo" label="智能模块编号" width="120"></el-table-column>
+						<el-table-column prop="beginAccount" label="期初帐存"></el-table-column>
+
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+
+			</div>
+			<div v-show="!showList2" style="text-align: center;">
+
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="oil" label="油品" width="80"></el-table-column>
+						<el-table-column prop="tankHeight" label="罐高" width="80"> </el-table-column>
+						<el-table-column prop="tankMaxCapacity" label="最大罐容" width="100"></el-table-column>
+						<el-table-column prop="tankCapacityPercentage" label="罐容率(%)" width="100"></el-table-column>
+						<el-table-column prop="levelNo" label="液位控制器编号" width="120"></el-table-column>
+						<el-table-column prop="intelligentModuleNo" label="智能模块编号" width="120"></el-table-column>
+						<el-table-column prop="beginAccount" label="期初帐存"></el-table-column>
+
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+
+			</div>
+		</div>
+
+		<script src="../../../js/modules/yunda/equipment/oilCount.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>

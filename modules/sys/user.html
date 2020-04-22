@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>系统用户</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+		<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="用户名">
+						<el-input v-model="q.username" size="mini" placeholder="用户名"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					员工列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+
+
+			<div v-show="showList">
+
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+
+						<el-table-column prop="username" label="用户名"></el-table-column>
+						<!--<el-table-column prop="e3" label="部门编号"></el-table-column>-->
+						<el-table-column prop="orgCode" label="机构编号"></el-table-column>
+						<el-table-column prop="departName" label="石油公司/油站"></el-table-column>
+						<el-table-column prop="roleName" label="角色"></el-table-column>
+						<el-table-column prop="email" label="邮箱"></el-table-column>
+						<el-table-column prop="mobile" label="手机号"></el-table-column>
+						<el-table-column prop="status"  label="状态">
+							<template slot-scope="scope">
+								<span class="label label-danger"  v-if="scope.row.status == '0' " >禁用</span>
+								<span class="label label-success" v-else>正常</span>
+							</template>
+						</el-table-column>
+						<el-table-column label="操作" width="180px">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :rules="rules" ref="addLine" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+
+					<el-form-item label="用户名"  prop="username">
+						<el-input v-model="addLine.username" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="密码"  prop="password">
+						<el-input v-model="addLine.password" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="邮箱"  prop="email">
+						<el-input v-model="addLine.email" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="手机号"  prop="mobile">
+						<el-input v-model="addLine.mobile" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="石油公司/加油站"  prop="orgCode">
+						<div @click="yfySDepartTree">
+							<el-input v-model="addLine.orgCode" :disabled="false"  placeholder="请选择" style="width: 300px;" suffix-icon="el-icon-search"></el-input>
+						</div>
+					</el-form-item>
+					<el-form-item label="角色"  prop="roleIdList">
+<!-- 							<label v-for="role in roleList" class="checkbox-inline"> -->
+<!-- 							  <input type="checkbox" :value="role.roleId" v-model="addLine.roleIdList">{{role.roleName}} -->
+<!-- 							</label> -->
+							<div style="width:310px;">
+								<el-checkbox-group v-model="addLine.roleIdList" style="display:block;float:right;">
+								    <el-checkbox v-for="role in roleList" :label="role.roleId" :key="role.roleId">{{role.roleName}}</el-checkbox>
+							    </el-checkbox-group>
+							</div>
+
+					</el-form-item>
+					<el-form-item label="状态 ">
+						<el-select v-model="addLine.status" placeholder="请选择" style="width: 300px;">
+							<el-option v-for="item in statusSel" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<!--<el-form-item label="对内对外">-->
+						<!--<el-select v-model="addLine.about" placeholder="请选择" style="width: 300px;">-->
+							<!--&lt;!&ndash;<el-option v-for="item in statusSel" :key="item.value" :label="item.label" :value="item.value"></el-option>&ndash;&gt;-->
+							<!--<el-option label="对内" value="0"></el-option>-->
+							<!--<el-option label="对外" value="1"></el-option>-->
+						<!--</el-select>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save('addLine')" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				</el-form>
+
+			</div>
+			<!-- 选择 -->
+			<div id="yfySDepartLayer" style="display: none;padding:10px;">
+				<ul id="yfySDepartTree" class="ztree"></ul>
+			</div>
+
+		</div>
+
+		<script src="../../js/modules/sys/sysuser.js"></script>
+	</body>
+</html>
+<style>
+
+
+</style>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+		<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<!--<div style="margin-top: 0px;margin-left: 20px;">-->
+					<!--<el-form :inline="true" :model="q" class="demo-form-inline">-->
+						<!--<el-form-item label="ID">-->
+							<!--<el-input v-model="q.id" size="mini" placeholder="ID"></el-input>-->
+						<!--</el-form-item>-->
+						<!--<el-form-item>-->
+							<!--<el-button type="primary" size="mini" @click="query">查询</el-button>-->
+						<!--</el-form-item>-->
+						<!--<el-form-item>-->
+							<!--<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>-->
+						<!--</el-form-item>-->
+					<!--</el-form>-->
+				<!--</div>-->
+				<template>
+					<el-table size="" v-loading="" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="id" label="id" width="50"></el-table-column>
+						<el-table-column prop="equipmentType" label="设备类型"></el-table-column>
+						<el-table-column prop="equipmentNumber" label="设备编号"></el-table-column>
+						<el-table-column prop="simNumber" label="sim卡号"></el-table-column>
+						<el-table-column prop="simEndtime" label="sim卡到期时间"></el-table-column>
+						<el-table-column prop="departname" label="部门名称"></el-table-column>
+						<!--<el-table-column prop="comment" label=""></el-table-column>-->
+						<el-table-column label="操作">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="设备类型">
+
+						<el-select v-model="addLine.equipmentType" placeholder="请选择" style="width: 300px;">
+							<el-option v-for="item in equipmentType" :key="item.value" :label="item.label" :value="item.label">
+							</el-option>
+						</el-select>
+						<!--<el-input v-model="addLine.equipmentType" placeholder="请输入" style="width: 300px;"></el-input>-->
+					</el-form-item>
+					<br />
+					<el-form-item label="设备编号">
+						<el-input v-model="addLine.equipmentNumber" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="sim卡号">
+						<el-input v-model="addLine.simNumber" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="sim卡到期时间" >
+							<div class="block">
+								<!--<span class="demonstration"></span>-->
+								<el-date-picker
+										v-model="addLine.simEndtime"
+										type="datetime"
+										placeholder="选择日期时间"
+									    format="yyyy 年 MM 月 dd 日"
+									    value-format="yyyy-MM-dd HH:mm:ss"
+									     style="width: 300px;">
+								</el-date-picker>
+
+						</div>
+					</el-form-item>
+					<br />
+					<el-form-item label="石油公司/加油站">
+						<div @click="yfySDepartTree">
+							<el-input v-model="addLine.orgCode" :disabled="false"  placeholder="请选择" style="width: 300px;"></el-input>
+						</div>
+					</el-form-item>
+					<br />
+					<el-form-item label="备注">
+						<el-input v-model="addLine.comment" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;"  @click="list">返回</el-button>
+				</el-form>
+				
+			</div>
+			<!-- 选择 -->
+			<div id="yfySDepartLayer" style="display: none;padding:10px;">
+				<ul id="yfySDepartTree" class="ztree"></ul>
+			</div>
+		</div>
+		<script src="../../js/modules/equipment/yfysequipment.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

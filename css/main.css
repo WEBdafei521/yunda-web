@@ -1,0 +1,116 @@
+/* html { overflow-x:hidden; } */
+body{
+	width: 95%
+}
+.content-header {
+	position: relative;
+	padding: 0 0 3px 8px
+}
+
+.content-header>.breadcrumb {
+    position: relative;
+    top: 0;
+    right: 0;
+    float: none;
+    margin-top: 0px;
+    padding-left: 10px;
+    background: #ecf0f5;
+}
+
+.main-footer {
+    padding: 7px;
+    color: #444;
+    border-top: 1px solid #eee;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+.grid-btn{
+	margin-bottom:12px;
+}
+.grid-btn .btn{
+	margin-right:10px;
+}
+.pointer{cursor: pointer;}
+
+.ml-10 { margin-left:0 !important; }
+@media (min-width: 768px) {
+	.ml-10 { margin-left:10px !important; }
+	.col-sm-10 {width: 70%;padding-left: 0px;}
+	.col-sm-2 {width: 24%;}
+}
+tbody > tr > th {font-weight: normal; }
+.panel .table { margin:0 0; }
+.panel .pagination { margin:0; }
+.panel-default>.panel-heading {background-color: #f5f5f5;}
+.row{
+	border-top: 1px solid #ddd;
+	margin:0;
+	padding:20px 2px 0px 2px;
+}
+.col-xs-6{padding-left: 0px;padding-right: 0px;}
+.form-horizontal .form-group {margin-left:0px;margin-right:0px;}
+.form-horizontal{
+	width:550px;padding-top:20px;
+}
+/*定义滚动条的轨道颜色、内阴影及圆角*/
+::-webkit-scrollbar-track {
+	background-color: #FFFFFF;
+	-webkit-box-shadow: inset 0 0 0px rgba(0, 0, 0, 0.22);
+	border-radius: 0px;
+}
+
+::-webkit-scrollbar {
+	width: 5px;/* 对垂直流动条有效 */
+	height: 6px;/* 对水平流动条有效 */
+	background-color: #FFFFFF;
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.22);
+	border-radius: 0px;
+}
+/* 定义滑块颜色、内阴影及圆角 */
+::-webkit-scrollbar-thumb {
+	background-color: #A8A8A8;
+	border-radius: 4px;
+	height: 30px;
+}
+
+.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-nav-tabs-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+	}
+
+	.page-footer-nav {
+		margin-right: 10%;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+		font-size: 14px;
+	}

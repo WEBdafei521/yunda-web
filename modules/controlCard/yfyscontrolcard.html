@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="车牌或卡号" >
+						<el-input v-model="q.id" size="mini" placeholder="车牌或卡号"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="id" label="id" width="50"></el-table-column>
+						<el-table-column prop="lpn" label="车牌号"></el-table-column>
+						<el-table-column prop="cardNumber" label="卡号"></el-table-column>
+						<el-table-column prop="username" label="司机"></el-table-column>
+						<el-table-column prop="oilName" label="限加油品"></el-table-column>
+						<el-table-column prop="confinQty" label="次限加油量(L)"></el-table-column>
+						<el-table-column prop="frequency" label="日限加油次数"></el-table-column>
+						<!--<el-table-column prop="indate" label="卡到期时间"></el-table-column>-->
+						<!--<el-table-column prop="type" label="类型：0：车辆 1：RFID卡"></el-table-column>-->
+						<!--<el-table-column prop="status" label="状态" width="80">-->
+							<!--<template slot-scope="scope">-->
+								<!--<span class="label label-danger"  v-if="scope.row.status == '0' " >禁用</span>-->
+								<!--<span class="label label-success" v-else>正常</span>-->
+							<!--</template>-->
+						<!--</el-table-column>-->
+						<el-table-column label="操作" width="180">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :rules="rules" ref="addLine" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+
+					<el-form-item label="类型" prop="authType">
+						<!--<el-input v-model="addLine.type" placeholder="请输入" style="width: 300px;"></el-input>-->
+						<!--<el-select v-model="addLine.type" placeholder="请选择" style="width: 300px;" clearable @change="ocChange">-->
+						<!--<el-option v-for="item in types" :key="item.key" :label="item.key" :value="item.type"></el-option>-->
+						<!--</el-select>-->
+						<el-select v-model="addLine.authType"  placeholder="请选择类型" style="width: 300px;" @change="chan">
+							<el-option label="车辆" value="0"></el-option>
+							<!--<el-option label="RFID卡" value="1"></el-option>-->
+							<el-option label="司机" value="2"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="车牌号" prop="lpn" v-if="edit==true">
+						<el-input v-model="addLine.lpn" placeholder="请输入" style="width: 300px;"  ></el-input>
+					</el-form-item>
+					<!--<el-form-item label="卡号" prop="cardNumber">-->
+						<!--<el-input v-model="addLine.cardNumber" placeholder="请输入" style="width: 300px;" :disabled="edit1"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<el-form-item label="司机" prop="username" v-if="edit1==true">
+						<el-input  v-model="addLine.username" placeholder="请输入" style="width: 300px;" ></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="限加油品">
+						<!--<el-input v-model="addLine.confineOil" placeholder="请输入" style="width: 300px;"></el-input>-->
+						<div @click="oilTree">
+							<el-input v-model="addLine.oilName" :disabled="false" placeholder="请选择" style="width: 300px;" suffix-icon="el-icon-search"></el-input>
+						</div>
+					</el-form-item>
+					<br />
+					<el-form-item label="次限加油量(L)">
+						<el-input v-model="addLine.confinQty" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="日限加油次数">
+						<el-input v-model="addLine.frequency" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!--<el-form-item label="卡到期时间">-->
+						<!--&lt;!&ndash;<el-input v-model="addLine.indate" placeholder="请输入" style="width: 300px;"></el-input>&ndash;&gt;-->
+						<!--<el-date-picker-->
+								<!--v-model="addLine.indate"-->
+								<!--type="datetime"-->
+								<!--placeholder="选择日期时间"-->
+								<!--value-format="yyyy-MM-dd HH:mm:ss"-->
+								<!--format="yyyy-MM-dd HH:mm:ss"-->
+						        <!--style="width: 300px;">-->
+						<!--</el-date-picker>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+
+					<!--<el-form-item label="状态：0：停用 1：正常">-->
+						<!--<el-input v-model="addLine.status" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<br />
+
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save('addLine')" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+			<!-- 选择菜单 -->
+			<div id="oilLayer" style="display: none;padding:10px;">
+				<ul id="oilTree" class="ztree"></ul>
+			</div>
+				
+		</div>
+		<script src="../../libs/check.param.js"></script>
+		<script src="../../js/modules/controlCard/yfyscontrolcard.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<link rel="stylesheet" href="../../css/bootstrap.min.css">
+<link rel="stylesheet" href="../../css/font-awesome.min.css">
+<link rel="stylesheet" href="../../plugins/jqgrid/ui.jqgrid-bootstrap.css">
+<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../plugins/layui/css/layui.css" />
+<link rel="stylesheet" href="../../plugins/elementUI/index.css">
+<script src="../../libs/jquery.min.js"></script>
+<script src="../../plugins/layer/layer.js"></script>
+<script src="../../libs/bootstrap.min.js"></script>
+<script src="../../libs/vue.min.js"></script>
+<script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+<script src="../../js/common.js"></script>
+<script src="../../plugins/layui/layui.js"></script>
+<script src="../../plugins/elementUI/index.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+	<div class="grid-btn">
+		<div class="form-group col-sm-2">
+			<input type="text" class="form-control" v-model="q.username" @keyup.enter="query" placeholder="司机名称">
+		</div>
+		<a class="btn btn-default" @click="query">查询</a>
+	</div>
+    <div class="yd-nav-tabs-custom" style="width:80%;float:left;margin-bottom:15px;">
+				<div class="yd-nav-tabs yd-active">
+					人车匹配
+				</div>
+
+			</div>
+	<div v-show="showList" style="width:80%;float:left;">
+	    <table id="jqUserGrid" lay-filter="jqUserGrid"></table>
+<!-- 	    <table id="jqGrid"></table> -->
+	    <div id="jqGridPager"></div>
+    </div>
+    <el-dialog title="选择车辆" :visible.sync="updateDialog" width="1000px" height="80%" @close = "closeDialog">
+		<el-form :inline="true" :model="yfyBUserVeh" label-width="100px" class="demo-form-inline" size="mini">
+			
+		    <el-form-item label="">
+		    	<div v-show="showList" style="width:100%;float:left;margin-left:10px;">
+				<template>
+				  <el-transfer
+				    filterable
+				    :filter-method="filterMethod"
+				    filter-placeholder="请输入"
+				    :titles="['选择车辆', '已绑车辆']"
+				    v-model="value"
+				    :data="data">
+<!-- 				    <el-button class="transfer-footer" slot="right-footer" size="medium" onclick="saveInfo()">保存</el-button> -->
+				  </el-transfer>
+				</template>
+		    </div>
+			</el-form-item>
+		</el-form>
+		<div slot="footer" class="dialog-footer">
+					<el-button @click="updateDialog = false">取 消</el-button>
+					<el-button type="primary" @click="saveInfo">确 定 </el-button>
+		</div>
+    </el-dialog>
+    <div v-show="!showList" class="panel panel-default">
+		<div class="panel-heading">{{title}}</div>
+		<form class="form-horizontal layui-form">
+											<div class="form-group">
+			   	<div class="col-sm-2 control-label">员工ID</div>
+			   	<div class="col-sm-10">
+<!-- 			      <input type="text" class="form-control" v-model="yfyBUserVeh.userId" placeholder="员工ID"/> -->
+			      <select name="userId" id="userId" lay-verify="" lay-search v-model="yfyBUserVeh.userId">
+						<option>请选择</option>
+				  </select>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">车辆ID</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="yfyBUserVeh.vehId" placeholder="车辆ID"/>
+			    </div>
+			</div>
+							<div class="form-group">
+				<div class="col-sm-2 control-label"></div> 
+				<input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+				&nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script src="../../js/modules/yunda/yfybuserveh.js"></script>
+<script src="../../js/modules/yunda/yundaUtil.js"></script>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+	.page-footer {
+	
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+	
+		/*  */
+	}
+	
+	.page-footer-nav {
+		margin-right: 10%;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+		font-size: 14px;
+	}
+	
+	.block {
+		margin-top: 20px;
+		width: 100%;
+	}
+	
+	.block .r_btn {
+		float: left;
+		width: 90px;
+	}
+	
+	.block .r_page {
+		float: right;
+	}
+	.el-transfer-panel {width: 350px;}
+</style>
+</body>
+</html>

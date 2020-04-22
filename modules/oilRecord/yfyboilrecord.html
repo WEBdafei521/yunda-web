@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+		
+			<div style="margin-top: 20px;margin-left: 20px;">
+					<el-form :inline="true" :model="yfyBOilRecord" class="demo-form-inline"  size="mini">
+				
+				
+						<el-form-item label="进油日期">
+							 <el-date-picker
+						      v-model="value2"
+						      type="datetimerange"
+						      :picker-options="pickerOptions"
+						      range-separator="至"
+						      start-placeholder="开始日期"
+						      end-placeholder="结束日期"
+						      align="right"
+						      :picker-options="pickerOptions">
+						    </el-date-picker>
+						</el-form-item>
+				
+						<!-- <el-form-item label="油品">
+							<template>
+							  <el-select v-model="oilCode" placeholder="请选择">
+							    <el-option
+							      v-for="item in oilCodeList"
+							      :key="item.oilCode"
+							      :label="item.oilName"
+							      :value="item.oilCode">
+							    </el-option>
+							  </el-select>
+							</template>
+						</el-form-item> -->
+						<!-- <el-form-item label="供应商">
+							<el-input v-model="yfyBOilRecord.name" size="mini" placeholder="供应商"></el-input>
+						</el-form-item> -->
+				
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+		
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			
+			
+		<transition name="el-fade-in-linear">
+			<div v-show="showList">
+				<!-- <div style="margin-top: 0px;margin-left: 20px;">
+					<el-form :inline="true" :model="q" class="demo-form-inline">
+						<el-form-item label="ID">
+							<el-input v-model="q.id" size="mini" placeholder="ID"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div> -->
+				<template>
+					<el-table size="" v-loading="loading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="id" label="id" width="50"></el-table-column>
+						<el-table-column prop="purchaseOrderNum" label="进油单号"></el-table-column>
+						<el-table-column prop="carrier" label="承运商"></el-table-column>
+						<el-table-column prop="primaryVolume" label="原发体积(L)"></el-table-column>
+						<el-table-column prop="oiltankCarNo" label="油罐车号"></el-table-column>
+						<el-table-column prop="meteringStaff" label="计量员"></el-table-column>
+						<el-table-column prop="purchaseDate" label="进油日期"></el-table-column>
+						<el-table-column prop="carrierDriver" label="承运司机"></el-table-column>
+						<el-table-column prop="unloadOiltank" label="卸入油罐"></el-table-column>
+						<el-table-column prop="supplier" label="供应商"></el-table-column>
+						<el-table-column prop="unloadOilNum" label="实际卸油(L)"></el-table-column>
+						<el-table-column label="操作" width="200px">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="medium" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="medium" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+		</transition>	
+			<div v-show="!showList" style="text-align: left;/* max-width: 600px;margin-top: 30px; */">
+				<el-form :inline="true" label-position="right" ref="addLine" status-icon :rules="rules"  :model="addLine" label-width="150px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="进油单号" prop="purchaseOrderNum">
+						<el-input v-model="addLine.purchaseOrderNum" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<el-form-item label="承运商">
+						<el-input v-model="addLine.carrier" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<br/>
+					
+					<el-form-item label="原发体积(L)">
+						<el-input v-model="addLine.primaryVolume" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<el-form-item label="油罐车号">
+						<el-input v-model="addLine.oiltankCarNo" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<br/>
+					
+					<el-form-item label="计量员">
+						<el-input v-model="addLine.meteringStaff" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<el-form-item label="进油日期" prop="purchaseDate" >
+<!-- 						<el-input v-model="addLine.purchaseDate" placeholder="请输入" style="width: 220px;"></el-input> -->
+						<el-date-picker
+					      v-model="addLine.purchaseDate"
+					      type="datetime"
+					      placeholder="选择日期"
+					      value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss">
+					    </el-date-picker>
+					</el-form-item>
+					<br/>
+					
+					<el-form-item label="承运司机">
+						<el-input v-model="addLine.carrierDriver" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					
+					<el-form-item label="卸入油罐"  prop="unloadOiltank">
+						<el-select v-model="addLine.unloadOiltank"  @change="selectTank($event)" placeholder="请选择" style="width: 220px;">
+							<el-option v-for="item in tankOptions" :key="item.id" :label="item.tankNo" :value="item.tankNo">
+								<span style="float: left">罐号:{{item.tankNo}}</span>
+								<span style="float: right; color: #8492a6; font-size: 13px">{{item.goodsName}}</span>
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<br/>
+					
+<!-- 					<el-form-item label="卸入油罐">
+						<el-input v-model="addLine.unloadOiltank" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item> -->
+					<el-form-item label="供应商">
+						<el-input v-model="addLine.supplier" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					<el-form-item label="实际卸油(L)"  prop="unloadOilNum">
+						<el-input v-model="addLine.unloadOilNum" placeholder="请输入" style="width: 220px;"></el-input>
+					</el-form-item>
+					
+					<div style="height: 30px;width:80%;text-align:center;">
+						<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+						<el-button plain size="mini" style="width: 100px;"  @click="list">取消</el-button>
+					</div>
+				</el-form>
+				
+			</div>
+				
+		</div>
+		<script src="../../libs/check.param.js"></script>	
+		<script src="../../js/modules/oilRecord/yfyboilrecord.js"></script>
+	</body>
+</html>
+<style>
+
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+
+</style>

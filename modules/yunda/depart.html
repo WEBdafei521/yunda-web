@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>加油站管理</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+		<style>
+			.el-upload__input{
+				display: none !important;
+			}
+			.avatar-uploader-icon{
+				width: 300px !important;
+				height: 160px !important;
+			}
+			.avatar-uploader{
+				height: 200px !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 15px;margin-left: 20px;">
+					<el-form :inline="true" :model="q" class="demo-form-inline">
+						<el-form-item label="部门名称">
+							<el-input v-model="q.departname" size="mini" placeholder="部门名称"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					部门列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						<el-table-column prop="e3" label="部门编号"></el-table-column>
+						<el-table-column prop="orgCode" label="机构编号"></el-table-column>
+						<el-table-column prop="departname" label="部门名称"></el-table-column>
+						<el-table-column prop="attn" label="联系人"></el-table-column>
+						<el-table-column prop="mobile" label="手机号"></el-table-column>
+						<el-table-column label="状态" prop="status">
+							<template slot-scope="scope">
+								<span class="label label-danger"  v-if="scope.row.status == '0' " >禁用</span>
+								<span class="label 	label-success" v-else>正常</span>
+								<!--<el-button v-if="scope.row.status == '0' " v-show="p.deleteShow" size="mini" type="danger" >异常</el-button>-->
+								<!--<el-button v-if="scope.row.status == '1' " v-show="p.deleteShow" size="mini" type="success" >正常</el-button>-->
+							</template>
+						</el-table-column>
+						<el-table-column label="操作" width="180">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-if="scope.row.status == '0' " v-show="p.deleteShow" size="mini" type="primary" @click="updateStatusRow(scope.$index, scope.row)">启用</el-button>
+								<el-button v-if="scope.row.status == '1' " v-show="p.deleteShow" size="mini" type="danger" @click="updateStatusRow(scope.$index, scope.row)">停用</el-button> 
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" ref="addLine" status-icon :rules="rules"  :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+						<el-form-item label="部门编号" prop="e3">
+							<el-input v-model="addLine.e3" :disabled="true" placeholder="部门编号" clearable style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="部门名称" prop="departname">
+							<el-input v-model="addLine.departname" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						
+						<el-form-item label="简称" prop="deptabbr">
+							<el-input v-model="addLine.deptabbr" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="联系人" prop="attn">
+							<el-input v-model="addLine.attn" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="手机号" prop="mobile">
+							<el-input v-model="addLine.mobile" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="电子邮箱" prop="email">
+							<el-input v-model="addLine.email" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="服务到期时间" prop="servicedate">
+							<el-date-picker v-model="addLine.servicedate" align="right" type="date" placeholder="选择日期" :picker-options="pickerOptions"
+							 style="width: 300px;" format="yyyy 年 MM 月 dd 日" value-format="yyyy-MM-dd HH:mm:ss">
+							</el-date-picker>
+						</el-form-item>
+						<el-form-item label="开户行" prop="bankname" v-show="false">
+							<el-input v-model="addLine.bankname" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="银行账户" prop="bankaccountno" v-show="false">
+							<el-input v-model="addLine.bankaccountno" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="传真" prop="fax" v-show="false">
+							<el-input v-model="addLine.fax" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<el-form-item label="税号" prop="taxcode" v-show="false">
+							<el-input v-model="addLine.taxcode" placeholder="请输入" style="width: 300px;"></el-input>
+						</el-form-item>
+						<!-- 城市 -->
+						<el-form-item label="省" prop="province">
+							<el-select v-model="addLine.e1" placeholder="请选择" style="width: 300px;" clearable @change="ocChange">
+								<el-option v-for="item in addr.province" :key="item.key" :label="item.key" :value="item.val"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="市" prop="city">
+							<el-select v-model="addLine.e2" placeholder="请选择" style="width: 300px;" clearable @change="ocChange2">
+								<el-option v-for="item in addr.city" :key="item.key" :label="item.key" :value="item.val"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="详细地址" prop="address">
+							<el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入内容" v-model="addLine.address"
+							 style="width: 300px;">
+							</el-input>
+						</el-form-item>
+						<el-form-item label="logo">
+							<el-upload
+							  class="avatar-uploader"
+							  
+							  :show-file-list="false"
+							  :on-success="handleAvatarSuccess"
+							  :before-upload="beforeAvatarUpload">
+							  <img v-if="imageUrl" :src="imageUrl" class="avatar">
+							  <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+								<div v-if="!imageUrl"  style="text-align:left;">
+									<div style="margin:5px;width: 80px;height:30px;text-align: center;line-height: 30px;background-color: #e1e1e1;border-radius: 4px;cursor: pointer;border:1px solid #b9b9b9;">上传图片</div>
+								</div>
+							</el-upload>
+						</el-form-item>
+					    <!--<el-form-item label="对内对外">-->
+						    <!--<el-select v-model="addLine.about" placeholder="请选择" style="width: 300px;">-->
+							<!--&lt;!&ndash;<el-option v-for="item in statusSel" :key="item.value" :label="item.label" :value="item.value"></el-option>&ndash;&gt;-->
+							    <!--<el-option label="对内" value="0"></el-option>-->
+							    <!--<el-option label="对外" value="1"></el-option>-->
+						    <!--</el-select>-->
+						<!--</el-form-item>-->
+
+						<el-form-item label="备注" prop="notes">
+							<el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入内容" v-model="addLine.notes"
+							 style="width: 300px;">
+							</el-input>
+			
+						</el-form-item>
+						<div style="height: 30px;"></div>
+			
+						<el-button type="primary" size="mini" style="width: 100px;margin-left: 100px;" @click="save"
+						 v-loading.fullscreen.lock="saveLoading">保存</el-button>
+						<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+			
+			
+				</el-form>
+			
+			</div>
+		</div>
+		<script src="../../libs/check.param.js"></script>	
+		<script src="../../js/modules/yunda/depart.js"></script>
+	</body>
+</html>
+<style>
+	.avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 300px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
+
+</style>

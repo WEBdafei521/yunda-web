@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../js/common.js"></script>
+		<script src="../../plugins/layui/layui.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+		
+		
+			<div style="margin-top: 20px;margin-left: 20px;">
+					<el-form :inline="true" :model="yfyBOilRecord" class="demo-form-inline">
+				
+				
+						<el-form-item label="进油日期">
+							 <el-date-picker
+						      v-model="value2"
+						      type="datetimerange"
+						      :picker-options="pickerOptions"
+						      range-separator="至"
+						      start-placeholder="开始日期"
+						      end-placeholder="结束日期"
+						      align="right">
+						    </el-date-picker>
+						</el-form-item>
+				<br />
+						<el-form-item label="油品">
+							<!-- <el-select v-model="yfyBOilRecord.region" placeholder="请选择" style="width: 90px;">
+								<el-option label="92#" value="1010"></el-option>
+								<el-option label="95#" value="1020"></el-option>
+								<el-option label="98#" value="1030"></el-option>
+							</el-select> -->
+							<template>
+							  <el-select v-model="oilCode" placeholder="请选择">
+							    <el-option
+							      v-for="item in oilCodeList"
+							      :key="item.oilCode"
+							      :label="item.oilName"
+							      :value="item.oilCode">
+							    </el-option>
+							  </el-select>
+							</template>
+							
+						</el-form-item>
+						<el-form-item label="供应商">
+							<el-input v-model="yfyBOilRecord.name" size="mini" placeholder="供应商"></el-input>
+						</el-form-item>
+				
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="onSubmit">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+				
+				
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					进油记录
+				</div>
+				<div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					进油登记
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="id" label="流水号" width="150"></el-table-column>
+						<el-table-column prop="businessDate" label="营业日期" width="180"> </el-table-column>
+						<el-table-column prop="oil" label="油品" width="100"></el-table-column>
+						<el-table-column prop="purchaseOrderNum" label="进油单号" width="180"></el-table-column>
+						<el-table-column prop="supplier" label="供应商" width="180"></el-table-column>
+						<el-table-column prop="oiltankCarNo" label="罐号" width="120"></el-table-column>
+						<el-table-column prop="unloadOilhight" label="原发体积"></el-table-column>
+						<el-table-column prop="unloadOilhight" label="实收体积"></el-table-column>
+						<el-table-column prop="unloadOilhight" label="期间发油"></el-table-column>
+
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;">
+
+				<el-form :inline="true" :model="yfyBOilRecord" class="demo-form-inline" size="mini"> <el-form-item label="进货单号">
+			<el-input v-model="yfyBOilRecord.purchaseOrderNum" placeholder="进货单号"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="营业日期">
+			<el-input v-model="yfyBOilRecord.businessDate" id="businessDate"
+				placeholder="营业日期" style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="承运商">
+			<el-input v-model="yfyBOilRecord.carrier" placeholder="承运商"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="原发体积">
+			<el-input v-model="yfyBOilRecord.primaryVolume" placeholder="原发体积"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="班次">
+			<el-input v-model="yfyBOilRecord.shift" placeholder="班次"
+				style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="油罐车号">
+			<el-input v-model="yfyBOilRecord.oiltankCarNo" placeholder="油罐车号"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="计量员">
+			<el-input v-model="yfyBOilRecord.meteringStaff" placeholder="计量员"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="进货日期">
+			<el-input v-model="yfyBOilRecord.purchaseDate" id="purchaseDate"
+				placeholder="进货日期" style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="承运司机">
+			<el-input v-model="yfyBOilRecord.carrierDriver" placeholder="承运司机"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸入油罐">
+			<el-input v-model="yfyBOilRecord.unloadOiltank" placeholder="卸入油罐"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="供应商">
+			<el-input v-model="yfyBOilRecord.supplier" placeholder="供应商"
+				style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="卸前油高">
+			<el-input v-model="yfyBOilRecord.preUnloadOilhight"
+				placeholder="卸前油高" style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸前水高">
+			<el-input v-model="yfyBOilRecord.preUnloadWaterhight"
+				placeholder="卸前水高" style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸前油温">
+			<el-input v-model="yfyBOilRecord.preUnloadOiltem" placeholder="卸前油温"
+				style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="卸前存油">
+			<el-input v-model="yfyBOilRecord.preUnloadingOil" placeholder="卸前存油"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="期间发油">
+			<el-input v-model="yfyBOilRecord.duringOil" placeholder="期间发油"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸后存油">
+			<el-input v-model="yfyBOilRecord.unloadOil" placeholder="卸后存油"
+				style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="卸后油高">
+			<el-input v-model="yfyBOilRecord.unloadOilhight" placeholder="卸后油高"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸后水高">
+			<el-input v-model="yfyBOilRecord.unloadWaterhight" placeholder="卸后水高"
+				style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="卸后油温">
+			<el-input v-model="yfyBOilRecord.unloadOiltem" placeholder="卸后油温"
+				style="width: 180px;"></el-input></el-form-item>
+				
+				<br/>
+				
+			<el-form-item label="开始时间">
+			<el-input v-model="yfyBOilRecord.startTime" id="startTime"
+				placeholder="开始时间" style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="结束时间">
+			<el-input v-model="yfyBOilRecord.endTime" id="endTime"
+				placeholder="结束时间" style="width: 180px;"></el-input></el-form-item>
+			<el-form-item label="实际卸油">
+			<el-input v-model="yfyBOilRecord.unloadOilNum" placeholder="实际卸油"
+				style="width: 180px;"></el-input></el-form-item> </el-form>
+				
+				<br/>
+				
+				<div style="margin-left: 5%;margin-right: 5%;">
+					<el-divider></el-divider>
+				</div>
+				<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+				<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				<!-- <div style="height: 40px;"></div>
+				<div class="page-footer">
+					<el-button type="primary" size="mini" style="width: 100px;">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				</div> -->
+
+			</div>
+		</div>
+
+		<script src="../../js/modules/oilRecord/oilRecord.js"></script>
+	</body>
+</html>
+<style>
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>

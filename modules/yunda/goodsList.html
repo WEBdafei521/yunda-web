@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					商品管理
+				</div>
+				<div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					添加商品
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<div style="margin-top: 20px;margin-left: 20px;">
+					<el-form :inline="true" :model="formInline" class="demo-form-inline">
+
+
+						<el-form-item label="商品分类">
+							<el-cascader :options="options" size="mini" v-model="formInline.selectedOptions"></el-cascader>
+						</el-form-item>
+
+						<el-form-item label="油站名">
+							<el-input v-model="formInline.name" size="mini" placeholder="油站名"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="onSubmit">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="departname" label="油站名"></el-table-column>
+						<el-table-column prop="count" label="数量"></el-table-column>
+						<el-table-column prop="goodsName" label="商品名"> </el-table-column>
+						<el-table-column prop="state" label="状态"></el-table-column>
+						<el-table-column prop="goodsNo" label="货号"></el-table-column>
+						<el-table-column prop="price" label="单价"></el-table-column>
+						<el-table-column label="操作">
+							<template slot-scope="scope">
+								<el-button size="mini" type="danger" @click="updatePrice(scope.$index, scope.row)">调价</el-button>
+								<el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">下架</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+
+				<el-form :inline="true" :model="formInline" label-width="200px" class="demo-form-inline" size="mini">
+
+					<el-form-item label="商品分类">
+						<el-cascader :options="options" size="mini" v-model="formInline.selectedOptions" style="width: 300px;"></el-cascader>
+					</el-form-item>
+					<br />
+
+					<el-form-item label="商品编号">
+						<el-input v-model="formInline.controllerNo" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+
+					<el-form-item label="单价">
+						<el-input v-model="formInline.price" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="备注">
+						<el-input type="textarea" placeholder="请输入内容" v-model="formInline.remarks" maxlength="100" show-word-limit style="width: 300px;">
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				</el-form>
+
+			</div>
+
+
+
+
+			<el-dialog title="商品调价" :visible.sync="updatePriceDialog" width="50%" :before-close="close_upd" style="min-width: 800px;">
+				<el-form :model="updatePriceForm" size="mini">
+					<el-form-item label="油品" :label-width="formLabelWidth">
+						<el-input placeholder="" v-model="updatePriceForm.goodsName" style="width: 100px;" :disabled="true"></el-input>
+						<font></font>
+					</el-form-item>
+					<el-form-item label="当前价格" :label-width="formLabelWidth">
+						<el-input placeholder="" v-model="updatePriceForm.price" style="width: 100px;" :disabled="true"></el-input>
+						<font>元/升</font>
+					</el-form-item>
+					<el-form-item label="* 新价格" :label-width="formLabelWidth">
+						<el-input v-model="updatePriceForm.newPrice" style="width: 100px;"></el-input>
+						<font>元/升</font>
+					</el-form-item>
+					<el-form-item label="* 选择油枪" :label-width="formLabelWidth">
+						<el-table ref="multipleTable" :data="yqData" tooltip-effect="dark" size="mini">
+							<el-table-column type="selection" width="55"></el-table-column>
+							<el-table-column prop="gunNo" label="油枪编号" width="120"></el-table-column>
+							<el-table-column prop="tankNo" label="罐号" width="120"></el-table-column>
+							<el-table-column prop="price" label="当前价格" show-overflow-tooltip>
+							</el-table-column>
+						</el-table>
+					</el-form-item>
+
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="updatePriceDialog = false">取 消</el-button>
+					<el-button type="primary" @click="savePrice">确 定 调 价</el-button>
+				</div>
+			</el-dialog>
+
+
+		</div>
+
+		<script src="../../js/modules/yunda/goodsList.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.page-footer {
+
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+
+		/*  */
+	}
+
+	.page-footer-nav {
+		margin-right: 10%;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+		font-size: 14px;
+	}
+
+	.block {
+		margin-top: 20px;
+		width: 100%;
+	}
+
+	.block .r_btn {
+		float: left;
+		width: 90px;
+	}
+
+	.block .r_page {
+		float: right;
+	}
+</style>

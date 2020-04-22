@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="商户id">
+						<el-input v-model="q.id" size="mini" placeholder="商户id"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					添加
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="id" label="id" width="50"></el-table-column>
+						<el-table-column prop="appid" label="应用id"></el-table-column>
+						<el-table-column prop="cusid" label="商户id"></el-table-column>
+						<!--<el-table-column prop="secretKey" label="秘钥"></el-table-column>-->
+						<el-table-column prop="url" label="url地址"></el-table-column>
+						<el-table-column prop="version" label="版本号"></el-table-column>
+						<el-table-column prop="departName" label="运营商名"></el-table-column>
+						<el-table-column prop="orgCode" label="机构编号"></el-table-column>
+						<!--<el-table-column prop="status" label="状态 0：禁用 1：正常"></el-table-column>-->
+						<el-table-column prop="status"  label="状态">
+							<template slot-scope="scope">
+								<span class="label label-danger"  v-if="scope.row.status == '0' " >禁用</span>
+								<span class="label label-success" v-else>正常</span>
+							</template>
+						</el-table-column>
+
+						<!--<el-table-column prop="e1" label="扩展1"></el-table-column>-->
+						<!--<el-table-column prop="e2" label="扩展2"></el-table-column>-->
+						<!--<el-table-column prop="e3" label="扩展3"></el-table-column>-->
+						<el-table-column label="操作" width="180px">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :rules="rules" ref="addLine" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="应用id" prop="appid">
+						<el-input v-model="addLine.appid" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="商户id">
+						<el-input v-model="addLine.cusid" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="秘钥">
+						<el-input v-model="addLine.secretKey" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="url地址">
+						<el-input v-model="addLine.url" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="版本号">
+						<el-input v-model="addLine.version" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="运营商名">
+						<!--<el-input v-model="addLine.orgCode" placeholder="请输入" style="width: 300px;"></el-input>--><template>
+						<el-select v-model="addLine.orgCode" placeholder="请选择" style="width: 300px;">
+							<el-option
+									v-for="item in operators"
+									:key="item.orgCode"
+									:label="item.departname"
+									:value="item.orgCode">
+							</el-option>
+						</el-select>
+					</template>
+					</el-form-item>
+					<br />
+					<!--<el-form-item label="机构名称">-->
+						<!--<el-input v-model="addLine.departName" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+
+					<!--<el-form-item label="状态 0：禁用 1：正常">-->
+						<!--<el-input v-model="addLine.status" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<!--<el-form-item label="扩展1">-->
+						<!--<el-input v-model="addLine.e1" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<!--<el-form-item label="扩展2">-->
+						<!--<el-input v-model="addLine.e2" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<!--<el-form-item label="扩展3">-->
+						<!--<el-input v-model="addLine.e3" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px; " @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+				
+				
+		</div>
+
+		<script src="../../js/modules/payment/yfyspayment.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

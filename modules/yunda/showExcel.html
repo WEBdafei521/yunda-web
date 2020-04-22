@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/echarts/echarts.min.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../js/common.js"></script>
+		<script src="../../plugins/layui/layui.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+				<div style="margin-top: 20px;margin-left: 20px;">
+					<el-form :inline="true" :model="formInline" size="mini" class="demo-form-inline">
+				
+				
+						<el-form-item label="开始日期">
+						    
+						    <el-date-picker
+								size="mini"
+								v-model="formInline.time"
+								type="datetimerange"
+								align="right"
+								unlink-panels
+								range-separator="至"
+								start-placeholder="开始日期"
+								end-placeholder="结束日期"
+								:picker-options="pickerOptions">
+							</el-date-picker>
+						</el-form-item>
+				<br />
+						<el-form-item label="司机" v-show="driverShow">
+							<template>
+							  <el-select v-model="userId" clearable placeholder="请选择">
+							    <el-option
+							      v-for="item in driverList"
+							      :key="item.userId"
+							      :label="item.username"
+							      :value="item.userId">
+							    </el-option>
+							  </el-select>
+							</template>
+						</el-form-item>
+						<el-form-item label="车牌号" v-show="lpnShow">
+							<template>
+							  <el-select v-model="lpn" clearable placeholder="请选择">
+							    <el-option
+							      v-for="item in carList"
+							      :key="item.lpn"
+							      :label="item.lpn"
+							      :value="item.lpn">
+							    </el-option>
+							  </el-select>
+							</template>
+						</el-form-item>
+				
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item >
+							<el-button type="primary" size="mini" @click="exportData()">导出报表</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					用油统计
+				</div>
+			</div>
+			<br />
+		<transition name="el-fade-in-linear">
+			<div v-show="showList" v-html = 'htmlStr'>
+				
+			</div>
+		</transition>
+		</div>
+
+		<script src="../../js/modules/yunda/showExcel.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>

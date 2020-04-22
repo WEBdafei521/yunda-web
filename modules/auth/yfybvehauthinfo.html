@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 15px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline" size="mini" >
+					<!-- <el-form-item label="部门">
+                        <el-cascader v-model="q.orgCode" :options="deptOptions" :show-all-levels="false"  :props="deptProps" clearable></el-cascader>
+                    </el-form-item> -->
+					<el-form-item label="石油公司" v-show="p.ocShow">
+						<el-select v-model="q.dept.oc" placeholder="请选择" style="width: 200px;" clearable @change="ocChange">
+							<el-option v-for="item in dept.oc" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="加油站">
+						<el-select v-model="q.dept.s" placeholder="请选择" style="width: 200px;" clearable>
+							<el-option v-for="item in dept.s" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+						</el-select>
+					</el-form-item>
+					<!--<el-form-item label="车牌号">-->
+						<!--<el-input v-model="q.lpn" placeholder="车牌号" clearable></el-input>-->
+					<!--</el-form-item>-->
+					<el-form-item label="车牌号" v-show="car">
+						<el-input v-model="q.lpn" placeholder="车牌号" clearable ></el-input>
+					</el-form-item>
+					<el-form-item label="司机名字" v-show="driver">
+						<el-input v-model="q.sname" placeholder="司机名字" clearable ></el-input>
+					</el-form-item>
+					<el-form-item label="时间">
+						<el-date-picker
+								v-model="q.time"
+								confirm type="daterange"
+								align="right"
+								unlink-panels
+								range-separator="至"
+								start-placeholder="开始日期"
+								end-placeholder="结束日期"
+								:picker-options="pickerOptions">
+						</el-date-picker>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					修改记录
+				</div>
+				<!-- <div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					添加
+				</div> -->
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="deptName" label="油站"></el-table-column>
+						<!--<el-table-column prop="lpn" label="车辆"></el-table-column>-->
+						<el-table-column v-if="car==true" prop="lpn" label="车牌号" ></el-table-column>
+						<el-table-column v-if="driver==true" prop="sname" label="司机" ></el-table-column>
+						<el-table-column v-if="driver==true" prop="username" label="用户名" ></el-table-column>
+
+						<el-table-column prop="preAuthQuantity" label="修改前授权量">
+							<template slot-scope="scope">
+								<span style="">{{ scope.row.preAuthQuantity }}</span>
+								<span v-if="scope.row.preAuthQuantity != '' && scope.row.preAuthQuantity != null" style="margin-left: 2px;font-style: oblique;">L</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="preAuthTimeType" label="修改前授权周期">
+							<template slot-scope="scope">
+								<el-tag v-if="scope.row.preAuthTimeType == 1 " size="mini" type="success">月</el-tag>
+								<el-tag v-if="scope.row.preAuthTimeType == 2 " size="mini" type="success">季度</el-tag>
+								<el-tag v-if="scope.row.preAuthTimeType == 3 " size="mini" type="success">年</el-tag>
+								<el-tag v-if="scope.row.preAuthTimeType == 9 " size="mini" type="success">不限</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column prop="preAuthSurplus" label="修改前剩余授权量">
+							<template slot-scope="scope">
+								<span style="">{{ scope.row.preAuthSurplus }}</span>
+								<span v-if="scope.row.preAuthSurplus != '' && scope.row.preAuthSurplus != null" style="margin-left: 2px;font-style: oblique;">L</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="aftAuthQuantity" label="修改后授权量">
+							<template slot-scope="scope">
+								<span style="">{{ scope.row.aftAuthQuantity }}</span>
+								<span v-if="scope.row.aftAuthQuantity != '' && scope.row.aftAuthQuantity != null" style="margin-left: 2px;font-style: oblique;">L</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="aftAuthTimeType" label="修改后授权周期">
+							<template slot-scope="scope">
+								<el-tag v-if="scope.row.aftAuthTimeType == 1 " size="mini" type="success">月</el-tag>
+								<el-tag v-if="scope.row.aftAuthTimeType == 2 " size="mini" type="success">季度</el-tag>
+								<el-tag v-if="scope.row.aftAuthTimeType == 3 " size="mini" type="success">年</el-tag>
+								<el-tag v-if="scope.row.aftAuthTimeType == 9 " size="mini" type="success">不限</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column prop="updateUser" label="修改人"></el-table-column>
+						<el-table-column prop="updateTime" label="修改时间"></el-table-column>
+						
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="车辆ID">
+						<el-input v-model="addLine.vehId" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改前授权量">
+						<el-input v-model="addLine.preAuthQuantity" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改前授权周期 1.月 2.季度 3.年 9.不限">
+						<el-input v-model="addLine.preAuthTimeType" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改前剩余授权量">
+						<el-input v-model="addLine.preAuthSurplus" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改后授权量">
+						<el-input v-model="addLine.aftAuthQuantity" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改后授权周期 1.月 2.季度 3.年 9.不限">
+						<el-input v-model="addLine.aftAuthTimeType" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改人">
+						<el-input v-model="addLine.updateUser" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改时间">
+						<el-input v-model="addLine.updateTime" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="临时授权量 ">
+						<el-input v-model="addLine.authQuantity" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="类型 1.修改计划授权 2.临时授权">
+						<el-input v-model="addLine.authType" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				</el-form>
+				
+			</div>
+				
+				
+		</div>
+
+		<script src="../../js/modules/auth/yfybvehauthinfo.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

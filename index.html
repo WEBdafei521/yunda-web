@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>燃油平台</title>
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="plugins/elementUI/index.css">
+		<style>
+			.header-nav{
+				overflow: hidden;
+			}
+			.left-nav{
+				/* background-color: #323943 !important; */
+				/* padding-top: ; */
+			}
+			.left-nav-btn-active{
+				/* border-left: 3px solid blue !important; */
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header-nav">
+				<el-col :span="24">
+					<div id="divRow" style="margin-left: 5%;margin-right: 5%;display: none" >
+						<el-row :span="24">
+							<div class="header-nav-bar">
+								<div class="header-nav-logo yd-float-left" style="text-align:center;">
+									<img src="img/logo.png" style="height: 51px;" />
+								</div>
+								<template v-for="item in items">
+									<div @click="clickItem(item)">
+										<div class="dropdown-toggle yd-float-left" :class="{'active':item.active}">
+
+											<el-dropdown @command="selectCommand" class="yd-header-menu">
+												<span class="el-dropdown-link dropdown-toggle">
+													<font>{{item.name}}</font>
+												</span>
+												<el-dropdown-menu slot="dropdown">
+													<template v-for="menu in item.list">
+
+														<el-dropdown-item icon="el-icon-circle-check-outline" :command='{menu: menu,item:item}'>{{menu.name}}</el-dropdown-item>
+
+													</template>
+												</el-dropdown-menu>
+											</el-dropdown>
+										</div>
+										
+
+									</div>
+								</template>
+
+
+								<div class="yd-float-right logout" style="color: #C2C5C9;" v-popover:dartinfo>
+
+									<font style="font-size: 14px;margin: 0 10px 0 10px;"><i class="el-icon-office-building">
+
+									</i>&nbsp;&nbsp;&nbsp;{{user.departName}}</font>
+								</div>
+								<div class="yd-float-right logout" style="color: #C2C5C9;" v-popover:userinfo>
+
+									<font style="font-size: 14px;margin: 0 10px 0 10px;"><i class="el-icon-user-solid">
+
+									</i>&nbsp;&nbsp;&nbsp;{{user.username}}</font>
+								</div>
+								<!--<div class="yd-float-right" style="color: #C2C5C9;" @click="downloadImg">-->
+
+									<!--<font style="font-size: 14px;margin: 0 10px 0 10px;">-->
+										<!--<i class="el-icon-full-screen"></i>&nbsp;生成二维码-->
+									<!--</font>-->
+								<!--</div>-->
+								<!-- <div class="yd-float-right logout" style="min-width: 120px;line-height: 51px;" @click="noticeDialog = true">
+
+									<el-badge :value="notice.length" :max="99" class="item" style="color: #C2C5C9;line-height: 14px;">
+										<font style="font-size: 14px;margin: 0 10px 0 10px;"><i class="el-icon-bell"></i>&nbsp;&nbsp;&nbsp;消息</font>
+									</el-badge>
+								</div> -->
+								<el-popover ref="userinfo" placement="bottom" width="200" trigger="click">
+									<div style="text-align: center;">
+										<!-- <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" style="width: 100px;height: 100px;float: inherit;"></el-avatar> -->
+										<div>电子邮箱：{{user.email}}</div>
+										<div>手机号：{{user.mobile}}</div>
+									</div>
+									<div style="text-align: center; margin-top: 20px;">
+										<div class="yd-float-left">
+											<el-button size="mini" icon="el-icon-setting" @click="updatePasswordDialog = true">修改密码</el-button>
+										</div>
+										<div class="yd-float-right">
+											<el-button size="mini" icon="el-icon-switch-button" @click="logout">退出登录</el-button>
+										</div>
+									</div>
+								</el-popover>
+								<el-popover ref="dartinfo" placement="bottom" width="200" trigger="click">
+									<div style="text-align: center;">
+										<!-- <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" style="width: 100px;height: 100px;float: inherit;"></el-avatar> -->
+										<div>机构编号：{{user.orgCode}}</div>
+										<!--<div>手机号：{{user.mobile}}</div>-->
+									</div>
+									<div style="text-align: center; margin-top: 20px;">
+										<div class="">
+											<el-button size="mini"  @click="downloadImg">生成邀请码</el-button>
+										</div>
+										<!--<div class="yd-float-right">-->
+											<!--<el-button size="mini" icon="el-icon-switch-button" @click="logout">退出登录</el-button>-->
+										<!--</div>-->
+									</div>
+								</el-popover>
+							</div>
+
+						</el-row>
+					</div>
+				</el-col>
+			</div>
+
+			<div>
+				<el-container :style="{height: fullHeight + 'px' , borderRight: '1px solid #FFFFFF' , marginLeft: '0%' , marginRight: '0%'}">
+					<el-aside width="200px" class="left-nav">
+						<div class="left-nav">
+							<template v-for="menu in menus">
+								<div class="left-nav-btn" :class="{'left-nav-btn-active':menu.active}" @click="goToPage(menu)">
+									<i class=`el-icon-${menu.name}`></i><font>{{menu.name}}</font>
+								</div>
+							</template>
+
+						</div>
+					</el-aside>
+
+					<el-container>
+						<el-main>
+							<div style="margin-left: 0px;">
+								<section class="content">
+									<iframe id="mainFrame" scrolling="yes" frameborder="0" style="width:100%;min-height:200px;overflow:visible;background:#fff;"
+									 :src="main"></iframe>
+								</section>
+							</div>
+						</el-main>
+					</el-container>
+				</el-container>
+
+			</div>
+
+
+
+
+
+			<el-dialog title="修改密码" :visible.sync="updatePasswordDialog" width="30%" :before-close="close_upd">
+				<el-form :model="updatePassword">
+					<el-form-item label="原始密码" :label-width="formLabelWidth">
+						<el-input placeholder="请输入密码" v-model="updatePassword.password" type="password"></el-input>
+					</el-form-item>
+					<el-form-item label="新密码" :label-width="formLabelWidth">
+						<el-input v-model="updatePassword.newPassword" type="password"></el-input>
+					</el-form-item>
+
+				</el-form>
+				<div  slot="footer" class="dialog-footer" style="display: none">
+					<el-button @click="updatePasswordDialog = false">取 消</el-button>
+					<el-button type="primary" @click="updatePwd">确 定</el-button>
+				</div>
+			</el-dialog>
+
+			<el-dialog title="系统消息" :visible.sync="noticeDialog" width="30%" :before-close="close_nd">
+				
+				<template v-for="item in notice">
+					<el-alert :title="item.title" :type="item.noticeType" :description="item.content" show-icon close-text="知道了" @close="closeNotice(item.id)"></el-alert>
+					<br />
+				</template>
+			</el-dialog>
+			
+			<el-dialog
+			title="删除"
+			:visible.sync="dialogVisible"
+			width="30%"
+			:before-close="close_del">
+				<el-form>
+					<el-form-item label="登陆密码" :label-width="formLabelWidth">
+						<el-input type="password" v-model="inputs"></el-input>
+					</el-form-item>
+				</el-form>
+				<!--<span slot="footer" class="dialog-footer">-->
+				<div slot="footer" class="dialog-footer" style="display: none">
+					<el-button @click="dialogVisible = false">取 消</el-button>
+					<el-button type="primary" @click="handleClose">确 定</el-button>
+				</div>
+				</span>
+			</el-dialog>
+			
+
+		</div>
+	</body>
+</html>
+<script src="libs/jquery.min.js"></script>
+<script src="libs/vue.min.js"></script>
+<script src="plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+<script src="plugins/elementUI/index.js"></script>
+<script src="plugins/layer/layer.js"></script>
+<script src="js/common.js"></script>
+
+<script>
+	var userss =  getLoginUser()
+
+	// iframe 自适应高度
+	$(window).on('resize', function() {
+		var $content = $('.content');
+		// console.log($content.height())
+		$content.height($(this).height() - 80);
+		$content.find('iframe').each(function() {
+			$(this).height($content.height());
+		});
+	}).resize();
+	var vm = new Vue({
+		el: '#app',
+		data: {
+			items: [],
+			menus: [],
+			user: {},
+			main: 'main.html',
+			screenWidth: document.body.clientWidth,
+			fullHeight: document.documentElement.clientHeight - 70,
+			updatePasswordDialog: false,
+			noticeDialog: false,
+			
+			updatePassword: {
+				password: '',
+				newPassword: '',
+			},
+			formLabelWidth: '80px',
+			notice:[],
+
+			isshow:false,
+			that:{},
+			dialogVisible: false,
+			ids:"",
+			inputs:""
+		},
+		mounted() {
+
+            document.getElementById("divRow").style.display="none";
+            document.getElementsByClassName("dialog-footer")[0].style.display="none";
+            document.getElementsByClassName("dialog-footer")[1].style.display="none";
+			const that = this
+
+			that.getUser();
+			that.getNotice();
+			// ----调用接口获取用户的菜单列表------  ↓↓↓↓  --------------------------
+			$.ajax({
+				type: "POST",
+				headers: {
+					'Access-Control-Allow-Origin': '*'
+				},
+				url: baseURL + "sys/menu/nav",
+				dataType: "json",
+				success: function(r) {
+					if (r.code == 0) {
+						//赋值
+						vm.items = r.menuList;
+						for (let i = 0; i < vm.items.length; i++) {
+							if (i == 0) {
+								vm.items[i].active = true
+							} else {
+								vm.items[i].active = false
+							}
+
+							for (let j = 0; j < vm.items[i].list.length; j++) {
+								if (j == 0) {
+									vm.items[i].list[j].active = true
+								} else {
+									vm.items[i].list[j].active = false
+								}
+							}
+						}
+						window.permissions = r.permissions;
+						//获取左边菜单按钮
+						that.getMenu(true);
+					} else {
+						layer.alert(r.msg);
+					}
+				}
+			});
+			// ----调用接口获取用户的菜单列表------  ↑↑↑↑  --------------------------
+
+			// ----高度宽度自适应------  ↓↓↓↓  --------------------------
+			window.onresize = () => {
+				return (() => {
+					// 屏幕宽度
+					window.screenWidth = document.body.clientWidth
+					// 屏幕高度
+					window.fullHeight = document.documentElement.clientHeight
+
+					that.screenWidth = window.screenWidth
+					that.fullHeight = window.fullHeight - 70
+				})();
+			}
+			// ----高度宽度自适应------  ↑↑↑↑  --------------------------
+
+            document.getElementById("divRow").style.display="";
+            document.getElementsByClassName("dialog-footer")[0].style.display="";
+            document.getElementsByClassName("dialog-footer")[1].style.display="";
+		},
+		methods: {
+			handleClose() {
+				var _this= this;
+				// 输入密码内容
+				var password = _this.inputs;
+				$.ajax({
+					type: "POST",
+					dataType: "json",
+				    url: baseURL + "sys/user/judgePassword",
+// 			        contentType: "application/json",
+			        async:true,
+				    data: {
+				    	password:password
+				    },
+				    success: function(data){
+						if(data.code==0){
+// 							_this.allDelFlag=true;
+								$.ajax({
+								type: "POST",
+							    url: baseURL + _this.that.url.deleteUrl,
+						        contentType: "application/json",
+							    data: JSON.stringify(_this.ids),
+							    success: function(r){
+									if(r.code == 0){
+										alert('操作成功', function(index){
+											_this.that.query();
+										});
+									}else{
+										alert(r.msg);
+									}
+								}
+								});
+						}else{
+							alert('密码错误', function(index){
+								_this.dialogVisible=false;
+							});
+						}
+					}
+				});
+				_this.dialogVisible=false;
+					
+			},
+			// ---- 生成二级菜单，也就是说根据一级菜单找到对应的二级菜单，显示到左侧 ------  ↓↓↓↓  --------------------------
+			getMenu(lock) {
+
+				var _this = this;
+				var addr = localStorage.getItem("main-url");
+				if (addr == null || addr == 'null') {
+					lock = false
+				}
+
+
+				if (lock) {
+					//alert(addr)
+
+					for (let i = 0; i < _this.items.length; i++) {
+						_this.items[i].active = false;
+					}
+
+					for (let i = 0; i < _this.items.length; i++) {
+						for (let j = 0; j < _this.items[i].list.length; j++) {
+
+							if (addr == _this.items[i].list[j].url) {
+
+								_this.menus = _this.items[i].list;
+								_this.items[i].active = true;
+								_this.goToPage(_this.items[i].list[j]);
+							}
+						}
+					}
+				}
+
+				if (!lock) {
+					// 将二级菜单清空
+					_this.menus = [];
+
+					// 遍历一级菜单,找到选中的一级菜单,
+					for (let i = 0; i < _this.items.length; i++) {
+						if (_this.items[i].active) {
+							// 将选中的一级菜单对应的二级菜单的值 赋值给要显示的二级菜单
+							_this.menus = _this.items[i].list
+						}
+					}
+
+					// 遍历二级菜单
+					for (let i = 0; i < _this.menus.length; i++) {
+						if (_this.menus[i].active) {
+							// 将选中的菜单的页面显示到iframe中
+							_this.goToPage(_this.menus[i]);
+						}
+
+					}
+				}
+
+
+			},
+			// ---- 生成二级菜单，也就是说根据一级菜单找到对应的二级菜单，显示到左侧 ------  ↑↑↑↑  --------------------------
+
+
+			// ---- 头部导航条，也就是一级菜单导航条 的 点击事件 ------------------------  ↓↓↓↓  --------------------------
+			clickItem(item) {
+				var _this = this;
+
+				// 遍历,将选中的一级菜单添加选中样式,其他的全部去掉选中样式
+				for (let i = 0; i < _this.items.length; i++) {
+					if (_this.items[i].menuId == item.menuId) {
+						_this.items[i].active = true;
+					} else {
+						_this.items[i].active = false;
+					}
+
+				}
+				//  去生成二级菜单
+				this.getMenu(false);
+			},
+			// ---- 头部导航条，也就是一级菜单导航条 的 点击事件 ------------------------  ↑↑↑↑  --------------------------
+
+
+			// ---- 头部导航条，一级菜单hover出现的二级导航的点击事件 -------------------  ↓↓↓↓  --------------------------
+			selectCommand(data) {
+				// 给对应的一级菜单添加选中样式
+				this.clickItem(data.item)
+				// 
+				this.goToPage(data.menu)
+			},
+			// ---- 头部导航条，一级菜单hover出现的二级导航的点击事件 -------------------  ↑↑↑↑  --------------------------
+
+			// ---- 左侧二级菜单的点击事件，也是页面跳转（iframe页面的跳转） -------------  ↓↓↓↓  --------------------------
+			goToPage(item) {
+				var _this = this;
+				for (let i = 0; i < _this.menus.length; i++) {
+					if (_this.menus[i].menuId == item.menuId) {
+						_this.menus[i].active = true;
+						// this.$notify.info({
+						// 	title: '消息',
+						// 	message: _this.menus[i].name,
+						// 	duration: 450
+						// });
+					} else {
+						_this.menus[i].active = false;
+					}
+				}
+				localStorage.setItem("main-url", item.url);
+				_this.main = item.url;
+			},
+			// ---- 左侧二级菜单的点击事件，也是页面跳转（iframe页面的跳转） -------------  ↑↑↑↑  --------------------------
+
+			// TODO---- 退出 -------------  ↓↓↓↓  --------------------------
+			logout() {
+				this.$confirm('是否确定退出系统?', '提示', {
+					confirmButtonText: '确定退出',
+					cancelButtonText: '取消',
+					type: 'error',
+				}).then(() => {
+					$.ajax({
+						type: "POST",
+						url: baseURL + "sys/logout",
+						dataType: "json",
+						success: function(r) {
+							//删除本地token
+							localStorage.removeItem("token");
+							localStorage.removeItem("main-url");
+
+							//跳转到登录页面
+							parent.location.href = 'login.html';
+						}
+					});
+				}).catch(() => {
+					this.$message({
+						type: 'info',
+						message: '取消退出'
+					});
+				});
+			},
+
+			getUser: function() {
+				var user = getLoginUser();
+				this.user = user;
+				this.user.departName=deptFun.getDeptInfoByOrgCode(user.orgCode).departname;
+			},
+
+			updatePwd: function() {
+				var _this = this;
+				vm.updatePasswordDialog = false;
+				var data = "password=" + vm.updatePassword.password + "&newPassword=" + vm.updatePassword.newPassword;
+				$.ajax({
+					type: "POST",
+					url: baseURL + "sys/user/password",
+					data: data,
+					dataType: "json",
+					success: function(r) {
+						if (r.code == 0) {
+							vm.updatePassword.password = "";
+							vm.updatePassword.newPassword = "";
+							_this.$notify({
+								title: '成功',
+								message: '修改密码成功',
+								type: 'success'
+							});
+						} else {
+							_this.$notify({
+								title: '错误',
+								message: r.msg,
+								type: 'error'
+							});
+						}
+					}
+				});
+			},
+
+			getNotice() {
+				for(let i = 1 ; i < 6; i++){
+					this.notice.push({
+						id: i,
+						title: '智能控制器异常',
+						content: '编号:056622'+ i + '异常，请尽快处理',
+						time: '2019-05-01',
+						noticeType: 'error'
+					})
+				}
+				
+				// for(let i = 1 ; i < this.notice.length; i++){
+				// 	this.$notify.error({
+				// 		title: this.notice[i].title,
+				// 		message: this.notice[i].content
+				// 	});
+				// }
+				
+				
+
+			},
+			//生成石油公司或站点二维码
+            downloadImg(){
+								location.href = baseURL + "sys/gen/downloadImg";
+								// console.log(baseURL+"sys/gen/downloadImg");
+			},
+
+			close_upd() {
+				this.updatePasswordDialog = false;
+			},
+			close_nd() {
+				this.noticeDialog = false;
+			},
+			close_del() {
+				this.dialogVisible = false;
+			},
+			closeNotice(id){
+				console.log('处理了'+id)
+			}
+			
+		}
+	});
+</script>
+
+<style>
+	.el-popover {
+		background: #d0d0d0;
+	}
+
+	.el-popper[x-placement^=bottom] .popper__arrow::after {
+
+		border-bottom-color: #232121;
+	}
+</style>
+<style>
+	* {
+		padding: 0;
+		margin: 0;
+	}
+
+	::-webkit-scrollbar-track {
+		background-color: #F5F5F5;
+		-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.22);
+		border-radius: 4px;
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+		background-color: #F1F1F1;
+		-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.22);
+		border-radius: 15px;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background-color: #A8A8A8;
+		border-radius: 4px;
+		height: 30px;
+	}
+
+	.yd-float-left {
+		float: left;
+	}
+
+	.yd-float-right {
+		float: right;
+	}
+
+	.yd-header-menu {
+		margin-left: 10px;
+		margin-right: 10px;
+		min-width: 50px;
+	}
+
+	.el-main {
+		padding: 0px;
+	}
+
+	.demonstration {
+		display: block;
+		color: #8492a6;
+		font-size: 14px;
+		margin-bottom: 20px;
+	}
+
+	.header-nav {
+		height: 51px;
+		line-height: 51px;
+		background-color: #323943;
+		-moz-box-shadow: 0px 1px 7px #000000;
+		-webkit-box-shadow: 0px 1px 7px #000000;
+		box-shadow: 0px 1px 7px #000000;
+	}
+
+	.left-nav {
+		background-color: #f9f9f9;
+	}
+
+	.header-nav-logo {
+		text-align: right;
+		width: 200px;
+	}
+
+	.header-nav-bar {
+		text-align: center;
+
+	}
+
+	.content {
+		text-align: right;
+		margin-top: 0px;
+	}
+
+	.dropdown-toggle {
+		color: #c2c5c9;
+		font-size: 14px;
+	}
+
+	.dropdown-toggle:hover {
+		color: #fff;
+		background-color: #38414E;
+	}
+
+	.active {
+		color: #fff;
+		background: #424b5e;
+		border-bottom: 1px solid #e3393c;
+	}
+
+	.main {
+		margin-left: 10px;
+		height: 170vh;
+		background-color: #424b5e;
+	}
+
+	.left-nav-btn {
+		display: block;
+		color: #323640;
+		font-size: 14px;
+		line-height: 44px;
+		height: 44px;
+		position: relative;
+		border-bottom: 1px solid #ececec;
+		color: #323640;
+		text-align: center;
+		/* 
+		background-color: #eaeaea;
+	color: #323640;
+	border-left: 3px solid #ff434c; */
+	}
+
+	.left-nav-btn:hover {
+		background-color: #f1f2f2;
+	}
+
+	.left-nav-btn-active {
+		background-color: #eaeaea;
+		color: #323640;
+		border-left: 3px solid #ff434c;
+	}
+
+	.page-footer {
+		margin-right: 5%;
+	}
+
+	.logout:hover {
+		background-color: #38414E;
+	}
+</style>

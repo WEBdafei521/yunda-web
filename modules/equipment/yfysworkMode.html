@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>油枪管理</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					工作模式配置
+				</div>
+			</div>
+			<div v-show="showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :model="controllerConfig" size="mini">
+					<el-form-item label="工作模式" label-width="200px">
+						<el-select v-model="controllerConfig.workMode" placeholder="请选择" style="width: 300px;">
+							<el-option v-for="item in workModeOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="GPS上传模式" label-width="200px">
+						<el-select v-model="controllerConfig.gpsUpload" placeholder="请选择" style="width: 300px;" @change="gpsStatusChange">
+							<el-option v-for="item in GPSUploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传GPS数据时间间隔(秒)" label-width="200px" v-show="controllerConfig.gpsStatusFlag">
+						<el-input v-model="controllerConfig.gpsUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="是否上传实时数据" label-width="200px">
+						<el-select v-model="controllerConfig.statusUpload" placeholder="请选择" style="width: 300px;"  @change="statusChange">
+							<el-option v-for="item in StatusuploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传实时数据时间间隔(秒)" label-width="200px" v-show="controllerConfig.statusFlag">
+						<el-input v-model="controllerConfig.statusUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="M1卡扇区号" label-width="200px"  v-show="false">
+						<el-input v-model="controllerConfig.sector" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="id" label-width="200px"  v-show="false">
+						<el-input v-model="controllerConfig.id" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="白名单版本号" label-width="200px"  v-show="false">
+						<el-input v-model="controllerConfig.WList" style="width: 300px;"></el-input>
+					</el-form-item>
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+<!-- 					<el-button @click="updateConfigDialog = false">取 消</el-button> -->
+					<el-button type="primary" @click="saveConfig">确 定</el-button>
+				</div>
+			</div>
+		</div>
+		<script src="../../js/modules/equipment/yfysworkmode.js"></script>
+		<script src="../../libs/check.param.js"></script>
+	</body>
+</html>
+<style>
+</style>

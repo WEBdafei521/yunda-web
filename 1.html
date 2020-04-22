@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>批量反地址解析+商圈</title>
+	<style type="text/css">
+		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
+		#l-map{height:300px;width:100%;}
+		#r-result{width:100%; font-size:14px;line-height:20px;}
+	</style>
+	<script type="text/javascript" src="HTTP://api.map.baidu.com/api?v=2.0&ak=YIyxOxPhOU1ZDF8iIgi2tO3R5FDNxr48"></script>
+</head>
+<body>
+	<div id="l-map"></div>
+	<div id="r-result">
+		<input type="button" value="批量反地址解析+商圈" onclick="bdGEO(0)" />
+		<div id="result"></div>
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+    // 批量逆地址解析
+    var str = sessionStorage.getItem('position');
+		var po = JSON.parse(str)
+			// 百度地图API功能
+		var index = 0;
+		var myGeo = new BMap.Geocoder();
+			// 所有的经纬度
+		var adds = [];
+			// 转换后的详细地址
+		var positions = [];
+		  // 遍历 油站经纬度
+		for(var i=0;i<po.length;i++){
+			adds.push(new BMap.Point(po[i].lon,po[i].lat))
+		}
+
+		bdGEO()
+		function bdGEO(){
+			var pt = adds[index];
+			geocodeSearch(pt);
+			index++;
+		}
+		function geocodeSearch(pt){
+			if(index < adds.length-1){
+				setTimeout(window.bdGEO,400);
+			}
+			myGeo.getLocation(pt, function(rs){
+				var addComp = rs.addressComponents;
+				positions.push(addComp)
+				// console.log(po[index-1])
+				data.push({name:addComp.province,value:{lon:po[index-1].lon,lat:po[index-1].lat},info:po[index-1]})
+				if(positions.length == adds.length){
+					// console.log(positions)
+					console.log(data)
+				}
+			});
+		}
+		
+		for(var i=0;i<adds.length;i++){
+			myGeo.getLocation(adds[i], function(rs){
+				console.log(rs)
+				// var addComp = rs.addressComponents;
+				// positions.push(addComp)
+				// // console.log(po[index-1])
+				// data.push({name:addComp.province,value:{lon:po[index-1].lon,lat:po[index-1].lat},info:po[index-1]})
+				// if(positions.length == adds.length){
+				// 	// console.log(positions)
+				// 	console.log(data)
+				// }
+			});
+		}
+</script>

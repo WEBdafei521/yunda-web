@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>系统用户</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="用户名">
+						<el-input v-model="q.name" size="mini" placeholder="用户名"></el-input>
+					</el-form-item>
+
+					<!--<el-form-item label="用户名">-->
+						<!--<el-select v-model="q.name" placeholder="请选择" style="width: 200px;" clearable>-->
+							<!--<el-option v-for="item in tableData" :key="item.username" :label="item.name" :value="item.username"></el-option>-->
+						<!--</el-select>-->
+					<!--</el-form-item>-->
+
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					司机列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="userId" label="司机编号" width="100px"></el-table-column>
+						<el-table-column prop="departName" label="石油公司/站点"></el-table-column>
+						<el-table-column prop="username" label="用户名"></el-table-column>
+						<el-table-column prop="name" label="司机名字"></el-table-column>
+						<el-table-column prop="about" label="车队管理员">
+							<template slot-scope="scope">
+								<span  v-if="scope.row.about == 3 " >是</span>
+								<span  v-if="scope.row.about == 2 " >否</span>
+								<span  v-else></span>
+							</template>
+						</el-table-column>
+<!-- 						<el-table-column prop="password" label="密码"></el-table-column> -->
+<!-- 						<el-table-column prop="orgCode" label="部门code"></el-table-column> -->
+						<!--<el-table-column prop="email" label="邮箱" v-if="around==false"></el-table-column>-->
+						<!--<el-table-column prop="tag" label="标签价" ></el-table-column>-->
+						<el-table-column prop="tagName" label="标签" >
+							<!--<template slot-scope="scope">-->
+								<!--<span  v-if="scope.row.tag == 3 " >是</span>-->
+								<!--<span  v-if="scope.row.tag == 2 " >否</span>-->
+								<!--<span  v-else></span>-->
+							<!--</template>-->
+						</el-table-column>
+						<el-table-column prop="mobile" label="手机号"></el-table-column>
+<!-- 						<el-table-column prop="createTime" label="创建时间"></el-table-column> -->
+						<el-table-column label="操作" width="180px">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :rules="rules" ref="addLine"  :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="授权码" prop="orgCode" >
+						<el-input v-model="orgCode"  style="width: 300px;" :disabled="true"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="用户名" prop="username">
+						<el-input v-model="addLine.username" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="姓名" prop="name">
+						<el-input v-model="addLine.name" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="密码" prop="password">
+						<el-input v-model="addLine.password" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!--<el-form-item label="邮箱" prop="email" v-if="around==false" >-->
+						<!--<el-input v-model="addLine.email" placeholder="请输入" style="width: 300px;"></el-input>-->
+					<!--</el-form-item>-->
+					<!--<br />-->
+					<el-form-item label="手机号" prop="mobile">
+						<el-input v-model="addLine.mobile" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="添加车队管理员"  prop="about" v-show="around">
+						<el-select v-model="addLine.about" placeholder="请选择" style="width: 300px;">
+							<!--<el-option v-for="item in statusSel" :key="item.value" :label="item.label" :value="item.value"></el-option>-->
+							<el-option label="是" value="3"></el-option>
+							<el-option label="否" value="2"></el-option>
+							<!--<el-option label="" value="1"></el-option>-->
+							<!--<el-option label="对外车队客户" value="2"></el-option>-->
+						</el-select>
+					</el-form-item>
+
+					<el-form-item label="选择标签"  prop="tag"  >
+						<el-select v-model="addLine.tag" placeholder="请选择" style="width: 300px;" >
+							<el-option v-for="item in tags" :key="item.id" :label="item.tagName" :value="item.id">
+								<!--<span style="float: left">标签号:{{item.id}}</span>-->
+								<!--<span style="float: right"> {{item.tagName}}</span>-->
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save('addLine')" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;"  @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+				
+				
+		</div>
+
+		<script src="../../js/modules/yunda/yfyclient.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

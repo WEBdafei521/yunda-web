@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../../libs/vue.js"></script>
+		<script src="../../../plugins/elementUI/index.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					油罐管理
+				</div>
+				<div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					添加油罐
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="oil" label="油品" width="80"></el-table-column>
+						<el-table-column prop="tankHeight" label="罐高" width="80"> </el-table-column>
+						<el-table-column prop="tankMaxCapacity" label="最大罐容" width="100"></el-table-column>
+						<el-table-column prop="tankCapacityPercentage" label="罐容率(%)" width="100"></el-table-column>
+						<el-table-column prop="levelNo" label="液位控制器编号" width="120"></el-table-column>
+						<el-table-column prop="intelligentModuleNo" label="智能模块编号" width="120"></el-table-column>
+						<el-table-column prop="beginAccount" label="期初帐存"></el-table-column>
+
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;">
+
+				<el-form :inline="true" :model="formInline" class="demo-form-inline" size="mini">
+					<el-form-item label="罐号">
+						<el-input v-model="formInline.user" :disabled="true" placeholder="罐号" style="width: 85px;"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 10px;"></div>
+					</el-form-item>
+					<el-form-item label="油品" label-width="60px">
+						<el-select v-model="formInline.region" placeholder="请选择" style="width: 90px;">
+							<el-option label="92#" value="1010"></el-option>
+							<el-option label="95#" value="1020"></el-option>
+							<el-option label="98#" value="1030"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="期初罐存">
+						<el-input v-model="formInline.user" placeholder="请输入" style="width: 90px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;升</font>
+					</el-form-item>
+					<el-form-item>
+						<el-checkbox v-model="formInline.checked" style="width: 80px;margin-left: 2px;">使用液位仪</el-checkbox>
+					</el-form-item>
+					<el-form-item label="液位仪编号" label-width="110px">
+						<el-input-number v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+					</el-form-item>
+					<br />
+					<el-form-item label="罐高">
+						<el-input v-model="formInline.user" placeholder="罐高" style="width: 85px;"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 10px;color: #909399;">mm</div>
+					</el-form-item>
+					<el-form-item label="罐容率" label-width="60px">
+						<el-input v-model="formInline.user" placeholder="罐高" style="width: 70px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;%</font>
+					</el-form-item>
+					<el-form-item label="最大罐容">
+						<el-input v-model="formInline.user" placeholder="请输入" style="width: 90px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;升</font>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 82px;"></div>
+					</el-form-item>
+					<el-form-item label="智能模块端口号" label-width="110px">
+						<el-input-number v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+					</el-form-item>
+				</el-form>
+				<div style="margin-left: 5%;margin-right: 5%;">
+					<el-divider></el-divider>
+				</div>
+				<el-row style="text-align: center;margin-top: 20px;">
+					<el-col :span="6">
+						<font class="yd-add-title">无液位存量报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高存量</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>低存量</font>
+									</div>
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">油位报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-2">
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>超高油位</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>高油位</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>底油位</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>超底油位</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>基本偏差</font>
+									</div>
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">水位报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高水位</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>基本偏差</font>
+									</div>
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">温度报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高温</font>
+									</div>
+
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>低温</font>
+									</div>
+									<el-input-number size="mini" v-model="formInline.num" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+				</el-row>
+				<div style="margin-left: 5%;margin-right: 5%;">
+					<el-divider></el-divider>
+				</div>
+				<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+				<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				<!-- <div style="height: 40px;"></div>
+				<div class="page-footer">
+					<el-button type="primary" size="mini" style="width: 100px;">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				</div> -->
+
+			</div>
+		</div>
+
+		<script src="../../../js/modules/yunda/equipment/oilTank.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>

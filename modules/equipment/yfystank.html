@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>油罐管理</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					油罐列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add('add')">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			<transition name="el-fade-in-linear">
+			<div v-show="showList">
+				<div style="margin-top: 0px;margin-left: 20px;">
+					<el-form :inline="true" :model="q" class="demo-form-inline" size="mini" v-show="false">
+						<!-- <el-form-item label="部门">
+							<el-cascader v-model="q.orgCode" :options="deptOptions" :show-all-levels="false"  :props="deptProps" clearable></el-cascader>
+						</el-form-item> -->
+						<el-form-item label="石油公司" v-show="p.ocShow">
+							<el-select v-model="q.dept.oc" placeholder="请选择" style="width: 200px;" clearable @change="ocChange">
+								<el-option v-for="item in dept.oc" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="加油站">
+							<el-select v-model="q.dept.s" placeholder="请选择" style="width: 200px;" clearable>
+								<el-option v-for="item in dept.s" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="罐号">
+							<el-input v-model="q.tankNo" size="mini" placeholder="罐号" clearable></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<!-- <el-table-column prop="id" label="id" width="50"></el-table-column> -->
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="deptName" label="所属油站" width="190"></el-table-column>
+						<el-table-column prop="goodsName" label="油品" width="150"></el-table-column>
+						<!-- <el-table-column prop="goodsCode" label="商品（油品）代码"></el-table-column> -->
+						<el-table-column prop="tankHeight" label="罐高" width="80"></el-table-column>
+						<el-table-column prop="tankMaxCapacity" label="最大罐容" width="100"></el-table-column>
+						<el-table-column prop="tankCapacityPercentage" label="罐容率(%)" width="100"></el-table-column>
+						<el-table-column prop="liquidLevelMeterNo" label="液位控制器编号"></el-table-column>
+						<!-- <el-table-column prop="intelligentModuleNo" label="智能模块端口号" width="120"></el-table-column>
+						<el-table-column prop="startTankStorage" label="期初灌存"></el-table-column> -->
+						<!-- <el-table-column prop="isLiquidLevelMeter" label="是否使用液位仪"></el-table-column>
+						<el-table-column prop="highStorage" label="无液位存量报警线-高存量"></el-table-column>
+						<el-table-column prop="lowStorage" label="无液位存量报警线-低存量"></el-table-column>
+						<el-table-column prop="superHighOilLevel" label="油位报警线-超高油位"></el-table-column>
+						<el-table-column prop="highOilLevel" label="油位报警线-高油位"></el-table-column>
+						<el-table-column prop="lowOilLevel" label="油位报警线-底油位"></el-table-column>
+						<el-table-column prop="superLowOilLevel" label="油位报警线-超底油位"></el-table-column>
+						<el-table-column prop="oilLevelDeviation" label="油位报警线-基本偏差"></el-table-column>
+						<el-table-column prop="highWater" label="水位报警线-高水位"></el-table-column>
+						<el-table-column prop="waterDeviation" label="水位报警线-基本偏差"></el-table-column>
+						<el-table-column prop="highTemperature" label=" 温度报警线-高温"></el-table-column>
+						<el-table-column prop="lowTemperature" label=" 温度报警线-低温"></el-table-column>
+						<el-table-column prop="creationTime" label="创建时间"></el-table-column>
+						<el-table-column prop="creationUser" label="创建人"></el-table-column>
+						<el-table-column prop="delState" label="删除标识（1.正常 2.删除）"></el-table-column> -->
+						<el-table-column label="操作" width="250">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			</transition>
+			<transition name="el-fade-in-linear">
+					
+			<div v-show="!showList" style="text-align: ;margin-top: 10px;"><!-- :rules="rules"  -->
+				<el-form :inline="true" ref="addLine" status-icon  :model="addLine" label-width="100px" class="demo-form-inline" size="mini">
+					<el-card shadow="hover">
+						<el-divider content-position="left">油罐信息</el-divider>
+						
+						<el-form-item label="罐号">
+							<el-input v-model="addLine.tankNo" :disabled="true" placeholder="" style="width: 200px;"></el-input>
+						</el-form-item>
+						<el-form-item label="罐高">
+							<el-input v-model="addLine.tankHeight" placeholder="罐高" style="width: 180px;"></el-input>
+							<font style="width: 30px;color: #909399;">&nbsp;厘米</font>
+						</el-form-item>
+						<br />
+						<el-form-item label="油品">
+							<el-select v-model="addLine.goodsId" placeholder="请选择" style="width: 200px;">
+								<el-option v-for="item in goodsOption" :key="item.id" :label="item.goodsName" :value="item.id"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="液位仪编号">
+							<el-select v-model="addLine.liquidLevelMeterId" placeholder="请选择" style="width: 200px;" @change="llmChange">
+								<el-option key="0" label="不使用液位控制器" value="0"></el-option>
+								<el-option v-for="item in liquidLevelMeter" :key="item.id" :label="item.controllerNo" :value="item.id"></el-option>
+							</el-select>
+						</el-form-item>
+						<br />
+						<el-form-item label="高油位">
+							<el-input v-model="addLine.highOilLevel" placeholder="高油位" style="width: 180px;"></el-input>
+							<font style="width: 30px;color: #909399;">&nbsp;升</font>
+						</el-form-item>
+						<el-form-item label="低油位">
+							<el-input v-model="addLine.lowOilLevel" placeholder="低油位" style="width: 180px;"></el-input>
+							<font style="width: 30px;color: #909399;">&nbsp;升</font>
+						</el-form-item>
+						<br />
+						<el-form-item label="最大罐容">
+							<el-input v-model="addLine.tankMaxCapacity" placeholder="最大罐容" style="width: 180px;"></el-input>
+							<font style="width: 30px;color: #909399;">&nbsp;升</font>
+						</el-form-item>
+						<!-- <el-form-item label="罐容率">
+							<el-input v-model="addLine.tankCapacityPercentage" placeholder="罐容率" style="width: 180px;"></el-input>
+							<font style="width: 30px;color: #909399;">&nbsp;%</font>
+						</el-form-item> -->
+						<br />
+						<div style="height: 30px;"></div>
+						<el-button type="primary" size="mini" style="width: 100px;margin-left: 100px;" @click="save"
+						 v-loading.fullscreen.lock="saveLoading">保存</el-button>
+						<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+					</el-card>
+			
+			
+				</el-form>
+			
+			</div>	
+				
+			<!-- <div v-show="!showList" style="text-align: center;">
+			
+				<el-form :inline="true" :model="addLine" class="demo-form-inline" size="mini">
+					<el-form-item label="罐号">
+						<el-input v-model="addLine.tankNo" :disabled="true" placeholder="罐号" style="width: 85px;"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 10px;"></div>
+					</el-form-item>
+					<el-form-item label="商品" label-width="60px">
+						<el-select v-model="addLine.goodsId" placeholder="请选择" style="width: 90px;">
+							<el-option v-for="item in goodsOption" :key="item.id" :label="item.goodsName" :value="item.id"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="期初罐存">
+						<el-input v-model="addLine.startTankStorage" placeholder="请输入" style="width: 90px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;升</font>
+					</el-form-item>
+					<el-form-item>
+						<el-checkbox v-model="addLine.isLiquidLevelMeter" style="width: 80px;margin-left: 2px;">使用液位仪</el-checkbox>
+					</el-form-item>
+					<el-form-item label="液位仪编号" label-width="110px">
+						<el-input-number v-model="addLine.liquidLevelMeterNo" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+					</el-form-item>
+					<br />
+					<el-form-item label="罐高">
+						<el-input v-model="addLine.tankHeight" placeholder="罐高" style="width: 85px;"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 10px;color: #909399;">mm</div>
+					</el-form-item>
+					<el-form-item label="罐容率" label-width="60px">
+						<el-input v-model="addLine.tankCapacityPercentage" placeholder="罐高" style="width: 70px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;%</font>
+					</el-form-item>
+					<el-form-item label="最大罐容">
+						<el-input v-model="addLine.tankMaxCapacity" placeholder="请输入" style="width: 90px;"></el-input>
+						<font style="width: 30px;color: #909399;">&nbsp;升</font>
+					</el-form-item>
+					<el-form-item>
+						<div style="width: 82px;"></div>
+					</el-form-item>
+					<el-form-item label="智能模块端口号" label-width="110px">
+						<el-input-number v-model="addLine.intelligentModuleNo" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+					</el-form-item>
+				</el-form>
+				<div style="margin-left: 5%;margin-right: 5%;">
+					<el-divider></el-divider>
+				</div>
+				<el-row style="text-align: center;margin-top: 20px;">
+					<el-col :span="6">
+						<font class="yd-add-title">无液位存量报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高存量</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.highStorage" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>低存量</font>
+									</div>
+									<el-input-number size="mini" v-model="addLine.lowStorage" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">油位报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-2">
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>超高油位</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.superHighOilLevel" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>高油位</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.highOilLevel" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>底油位</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.lowOilLevel" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>超底油位</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.superLowOilLevel" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-2">
+									<div class="yd-add-itme-label">
+										<font>基本偏差</font>
+									</div>
+									<el-input-number size="mini" v-model="addLine.oilLevelDeviation" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">水位报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高水位</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.highWater" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>基本偏差</font>
+									</div>
+									<el-input-number size="mini" v-model="addLine.waterDeviation" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+					<el-col :span="6">
+						<font class="yd-add-title">温度报警线</font>
+						<div class="yd-add-content">
+							<div class="yd-add-form-1">
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>高温</font>
+									</div>
+			
+									<el-input-number size="mini" v-model="addLine.highTemperature" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+								<div class="yd-add-itme-1">
+									<div class="yd-add-itme-label">
+										<font>低温</font>
+									</div>
+									<el-input-number size="mini" v-model="addLine.lowTemperature" controls-position="right" :min="1" :max="1000" style="width:100px;"></el-input-number>
+								</div>
+							</div>
+						</div>
+					</el-col>
+				</el-row>
+				<div style="margin-left: 5%;margin-right: 5%;">
+					<el-divider></el-divider>
+				</div>
+				
+				
+				<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+				<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				
+			
+			</div> -->
+			</transition>
+				
+				
+		</div>
+
+		<script src="../../js/modules/equipment/yfystank.js"></script>
+	</body>
+</html>
+<style>
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+	
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+	
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+	
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+	
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+	
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+	
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+	
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+	
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+
+</style>

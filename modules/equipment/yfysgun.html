@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>油枪管理</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					油枪列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add('add')">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<div style="margin-top: 0px;margin-left: 20px;">
+					<el-form :inline="true"  v-show="false" :model="q" class="demo-form-inline" size="mini">
+						<!-- <el-form-item label="部门">
+							<el-cascader v-model="q.orgCode" :options="deptOptions" :show-all-levels="false"  :props="deptProps" clearable></el-cascader>
+						</el-form-item> -->
+						<el-form-item label="石油公司" v-show="p.ocShow">
+							<el-select v-model="q.dept.oc" placeholder="请选择" style="width: 200px;" clearable @change="ocChange">
+								<el-option v-for="item in dept.oc" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="加油站">
+							<el-select v-model="q.dept.s" placeholder="请选择" style="width: 200px;" clearable>
+								<el-option v-for="item in dept.s" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="枪号">
+							<el-input v-model="q.gunNo" size="mini" placeholder="枪号" clearable></el-input>
+						</el-form-item>
+						<el-form-item label="智能控制器编号">
+							<el-input v-model="q.controllerNo" size="mini" placeholder="智能控制器编号" clearable></el-input>
+						</el-form-item>
+						<el-form-item label="罐号">
+							<el-input v-model="q.tankNo" size="mini" placeholder="罐号" clearable></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+						</el-form-item>
+					</el-form>
+					<!-- <el-form :inline="true"  v-show="true"  class="demo-form-inline" size="mini">
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="updateConfig">配置设备工作模式</el-button>
+						</el-form-item>
+					</el-form> -->
+				</div>
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="deptName" label="所属油站" width="150"></el-table-column>
+						<el-table-column prop="gunNo" label="枪号" width="50"></el-table-column>
+						<el-table-column prop="controllerNo" label="智能控制器编号" width="140"></el-table-column>
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="price" label="单价" width="50"></el-table-column>
+						<el-table-column prop="goodsName" label="油品" width="150"></el-table-column>
+						<el-table-column prop="protocolType" label="协议类型" width=""></el-table-column>
+						<!--<el-table-column prop="goodsName" label="油品" width=""></el-table-column>-->
+<!-- 						<el-table-column prop="beginNum" label="期初升泵码" width=""></el-table-column> -->
+						<el-table-column label="操作" width="350">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updataPrice(scope.$index, scope.row)">调价</el-button>
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="setConfig(scope.$index, scope.row)">下发配置</el-button>
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" ref="addLine" status-icon :rules="rules" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<!-- <el-form-item label="所属部门">
+						<el-input v-model="addLine.orgCode" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item> -->
+					<br />
+					<el-form-item label="枪号">
+						
+						<el-input v-model="addLine.gunNo"  :disabled="true" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!-- <el-form-item label="智能控制器ID">
+						<el-input v-model="addLine.controllerId" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br /> -->
+					<el-form-item label="智能控制器" prop="controllerNo">
+						
+						<el-select v-model="addLine.controllerNo" placeholder="请选择" style="width: 300px;" @change="controllerSelect"> 
+							<el-option v-for="item in controllerOptions" :key="item.id" :label="item.controllerNo" :value="item"></el-option>
+						</el-select>
+						
+						<!-- <el-input v-model="addLine.controllerNo" placeholder="请输入" style="width: 300px;"></el-input> -->
+					</el-form-item>
+					<br />
+					<!-- <el-form-item label="罐ID">
+						<el-input v-model="addLine.tankId" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br /> -->
+					<el-form-item label="罐号"  prop="tankNo">
+						
+						<el-select v-model="addLine.tankNo" placeholder="请选择" style="width: 300px;" @change="tankSelect">
+							<el-option v-for="item in tankOptions" :key="item.id" :label="item.tankNo" :value="item">
+								<span style="float: left">罐号:{{item.tankNo}}</span>
+								<span style="float: right; color: #8492a6; font-size: 13px">{{item.goodsName}}</span>
+							</el-option>
+						</el-select>
+						<!-- <el-input v-model="addLine.tankNo" placeholder="请输入" style="width: 300px;"></el-input> -->
+					</el-form-item>
+					<br />
+
+					<el-form-item label="油品名">
+						<el-input v-model="addLine.goodsName"  :disabled="true" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+
+					<el-form-item label="协议"  prop="typeNumber">
+
+						<!--<el-input v-model="addLine.typeNumber"  placeholder="请输入" style="width: 300px;"></el-input>-->
+
+						<el-select v-model="addLine.typeNumber" placeholder="请选择" style="width: 300px;" @change="numberSelect">
+							<el-option v-for="item in numberOptions" :key="item.number"   :value="item">
+								<span style="float: left">编号:{{item.number}}</span>
+								<span style="float: right"> {{item.protocolType}}</span>
+								<!--<span style="float: right; color: #8492a6; font-size: 13px">{{item.goodsName}}</span>-->
+							</el-option>
+						</el-select>
+						<!-- <el-input v-model="addLine.tankNo" placeholder="请输入" style="width: 300px;"></el-input> -->
+					</el-form-item>
+
+					<el-form-item label="单价"  v-show="false">
+						<el-input v-model="addLine.price" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="期初升泵码" v-show="false">
+						<el-input v-model="addLine.beginNum" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="工作模式" label-width="200px">
+						<el-select v-model="addLine.workMode" placeholder="请选择" style="width: 300px;">
+							<el-option v-for="item in workModeOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="GPS上传模式" label-width="200px">
+						<el-select v-model="addLine.gpsUpload" placeholder="请选择" style="width: 300px;" @change="gpsStatusChange">
+							<el-option v-for="item in GPSUploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传GPS数据时间间隔(秒)" label-width="200px" v-show="addLine.gpsStatusFlag">
+						<el-input v-model="addLine.gpsUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="是否上传实时数据" label-width="200px">
+						<el-select v-model="addLine.statusUpload" placeholder="请选择" style="width: 300px;"  @change="statusChange">
+							<el-option v-for="item in StatusuploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传实时数据时间间隔(秒)" label-width="200px" v-show="addLine.statusFlag">
+						<el-input v-model="addLine.statusUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="M1卡扇区号" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.sector" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="id" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.id" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="白名单版本号" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.WList" style="width: 300px;"></el-input>
+					</el-form-item>
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+				
+			
+			<el-dialog title="单枪调价" :visible.sync="updatePriceDialog" width="50%" @close = "closeDialog">
+				<el-form :inline="true" :model="updatePriceForm" label-width="100px" class="demo-form-inline" size="mini">
+					<el-form-item label="油枪号">
+						<el-input v-model="updatePriceForm.gunNo" placeholder="" style="width: 300px;" :disabled="true"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="原始单价">
+						<el-input v-model="updatePriceForm.oldPrice" placeholder="" style="width: 300px;" :disabled="true"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="新价格">
+						<el-input v-model="updatePriceForm.price" placeholder="" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="updatePriceDialog = false">取 消</el-button>
+					<el-button type="primary" @click="updatePriceSubmit" v-loading.fullscreen.lock="fullscreenLoading">确 定</el-button>
+				</div>
+				
+			</el-dialog>
+			<!-- 下发配置 -->
+			<el-dialog title="设置设备模式信息" :visible.sync="updateConfigDialog" width="50%"  style="min-width: 800px;">
+				<el-form :model="addLine" size="mini">
+					<el-form-item label="工作模式" label-width="200px">
+						<el-select v-model="addLine.workMode" placeholder="请选择" style="width: 300px;">
+							<el-option v-for="item in workModeOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="GPS上传模式" label-width="200px">
+						<el-select v-model="addLine.gpsUpload" placeholder="请选择" style="width: 300px;" @change="gpsStatusChange">
+							<el-option v-for="item in GPSUploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传GPS数据时间间隔(秒)" label-width="200px" v-show="addLine.gpsStatusFlag">
+						<el-input v-model="addLine.gpsUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="是否上传实时数据" label-width="200px">
+						<el-select v-model="addLine.statusUpload" placeholder="请选择" style="width: 300px;"  @change="statusChange">
+							<el-option v-for="item in StatusuploadOptions" :key="item.value" :label="item.label" :value="item.value">
+							</el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="上传实时数据时间间隔(秒)" label-width="200px" v-show="addLine.statusFlag">
+						<el-input v-model="addLine.statusUploadTime" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="M1卡扇区号" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.sector" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="id" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.id" style="width: 300px;"></el-input>
+					</el-form-item>
+					<el-form-item label="白名单版本号" label-width="200px"  v-show="false">
+						<el-input v-model="addLine.WList" style="width: 300px;"></el-input>
+					</el-form-item>
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="updateConfigDialog = false">取 消</el-button>
+					<el-button type="primary" @click="saveConfig">确 定</el-button>
+				</div>
+			</el-dialog>	
+		</div>
+
+		<script src="../../js/modules/equipment/yfysgun.js"></script>
+		<script src="../../libs/check.param.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

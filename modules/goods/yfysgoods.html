@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>油品</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 15px;margin-left: 20px;">
+					<el-form :inline="true" :model="q" class="demo-form-inline" size="mini" >
+						<!-- <el-form-item label="部门">
+							<el-cascader v-model="q.orgCode" :options="deptOptions" :show-all-levels="false"  :props="deptProps" clearable></el-cascader>
+						</el-form-item> -->
+						<el-form-item label="石油公司" v-show="p.ocShow">
+							<el-select v-model="q.dept.oc" placeholder="请选择" style="width: 200px;" clearable @change="ocChange">
+								<el-option v-for="item in dept.oc" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="加油站">
+							<el-select v-model="q.dept.s" placeholder="请选择" style="width: 200px;" clearable>
+								<el-option v-for="item in dept.s" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="油品名">
+							<el-input v-model="q.goodsName" placeholder="油品名"></el-input>
+						</el-form-item>
+						<el-form-item label="油品代码">
+							<el-input v-model="q.goodsCode" placeholder="油品代码"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" @click="query">查询</el-button>
+						</el-form-item>
+						<!-- 更新说明：一个站、一个石油公司不会存在太多的油品，没必要用导出功能 -->
+						<!-- <el-form-item>
+							<el-button v-show="p.exportShow" type="primary"  @click="exportData">导出数据</el-button>
+						</el-form-item> -->
+					</el-form>
+				</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					油品列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					添加油品
+				</div>
+			</div>
+			<br />
+
+
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%">
+
+						<!-- <el-table-column prop="id" label="id" width="50"></el-table-column> -->
+						<el-table-column prop="deptName" :label="departTypeName"></el-table-column>
+						<!-- <el-table-column prop="itemId" label="油品分类ID"></el-table-column>
+						<el-table-column prop="itemType" label="油品类型(1. 油品 2. 非油品) 暂时不用默认全部为油品"></el-table-column>
+						 -->
+						<el-table-column prop="goodsName" label="油品名"></el-table-column>
+
+						<el-table-column prop="goodsCode" label="油品代码"></el-table-column>
+						<!-- <el-table-column prop="abbreviate" label="简称"></el-table-column> -->
+						<!-- <el-table-column prop="goodsDetails" label="油品详情"></el-table-column> -->
+						<el-table-column prop="price" label="单价">
+							<template slot-scope="scope">
+								{{scope.row.price}} 元/升
+							</template>
+						</el-table-column>
+
+						<!-- <el-table-column prop="goodsState" label="状态">
+							<template slot-scope="scope">
+								<el-tag v-if="scope.row.goodsState == 1 " size="mini" type="success">在售中</el-tag>
+								<el-tag v-if="scope.row.goodsState == 2 " size="mini" type="info">已下架</el-tag>
+							</template>
+						</el-table-column> -->
+
+						<!-- 
+						<el-table-column prop="updateUser" label="修改人"></el-table-column>
+						<el-table-column prop="updateTime" label="修改时间"></el-table-column> -->
+						<el-table-column label="操作">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow" size="mini" type="primary" @click="updatePrice(scope.$index, scope.row)">调价</el-button>
+<!-- 								<el-button v-if="scope.row.goodsState == 1 " v-show="p.deleteShow" size="mini" type="danger" >下架</el-button> -->
+ 								<el-button v-show="p.deleteShow" size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button> 
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" ref="addLine" status-icon :rules="rules" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+
+					<!-- <el-form-item label="部门">
+						<el-input v-model="addLine.orgCode" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br /> -->
+					<el-form-item label="油品分类">
+						<div @click="oilTree">
+							<el-input v-model="itemName" :disabled="false" placeholder="请选择" style="width: 300px;" suffix-icon="el-icon-search"></el-input>
+						</div>
+					</el-form-item>
+					<br />
+					<el-form-item label="油品代码" prop="goodsCode">
+
+						<el-input v-model="addLine.goodsCode" :disabled="true" placeholder="请先选择油品分类" style="width: 300px;"></el-input>
+
+					</el-form-item>
+					<br />
+					<el-form-item label="油品名" prop="goodsName">
+						<el-input v-model="addLine.goodsName" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="简称" prop="abbreviate">
+						<el-input v-model="addLine.abbreviate" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="单价" prop="price">
+						<el-input v-model="addLine.price" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="油品详情" prop="goodsDetails">
+						<span style="display: inline-block;height: 35px;line-height: 0;color:red;">*</span>
+						<el-input v-model="addLine.goodsDetails" type="textarea" maxlength="100" placeholder="请输入" style="width: 300px;"
+						 show-word-limit></el-input>
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				</el-form>
+
+			</div>
+
+			<div v-show="nowDate"></div>
+
+			<!-- 选择菜单 -->
+			<div id="oilLayer" style="display: none;padding:10px;">
+				<ul id="oilTree" class="ztree"></ul>
+			</div>
+			
+			<!-- 调价 -->
+			<el-dialog title="油品调价" :visible.sync="updatePriceDialog" width="50%"  style="min-width: 800px;">
+				<el-form :model="updatePriceForm" size="mini">
+					<el-form-item label="油品" label-width="100px">
+						<el-input placeholder="" v-model="updatePriceForm.goodsName" style="width: 100px;" :disabled="true"></el-input>
+						<font></font>
+					</el-form-item>
+					<el-form-item label="当前价格" label-width="100px">
+						<el-input placeholder="" v-model="updatePriceForm.price" style="width: 100px;" :disabled="true"></el-input>
+						<font>元/升</font>
+					</el-form-item>
+					
+					<el-form-item label=" 新价格" label-width="100px">
+							<span style="color: red;">*</span>
+						<el-input v-model="updatePriceForm.newPrice" style="width: 100px;"></el-input>
+						<font>元/升</font>
+						
+					</el-form-item>
+					<el-form-item label="选择油枪" label-width="100px">
+							<span style="display:inline-block;color: red;">*</span>
+						<el-table ref="multipleTable" :data="yqData" tooltip-effect="dark" size="mini" @selection-change="yqTableSelectionChange">
+							<el-table-column type="selection" width="55"></el-table-column>
+							<el-table-column prop="gunNo" label="油枪编号" width="120"></el-table-column>
+							<el-table-column prop="tankNo" label="罐号" width="120"></el-table-column>
+							<el-table-column prop="price" label="当前价格" show-overflow-tooltip>
+							</el-table-column>
+						</el-table>
+						
+					</el-form-item>
+			
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="updatePriceDialog = false">取 消</el-button>
+					<el-button type="primary" @click="savePrice" v-loading.fullscreen.lock="fullscreenLoading">确 定 调 价</el-button>
+				</div>
+			</el-dialog>
+			
+		</div>
+		<script src="../../libs/check.param.js"></script>
+		<script src="../../js/modules/goods/yfysgoods.js"></script>
+	</body>
+</html>
+<style>
+
+
+</style>

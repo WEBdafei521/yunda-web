@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="油品代码">
+						<el-input v-model="q.oilCode" size="mini" placeholder="油品代码"></el-input>
+					</el-form-item>
+					<el-form-item label="油品名">
+						<el-input v-model="q.oilName" size="mini" placeholder="油品名"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					油品字典
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}油品
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						<el-table-column prop="languageId" label="国际化"></el-table-column>
+						<el-table-column prop="oilName" label="油品名"></el-table-column>
+						<el-table-column prop="abbreviate" label="简称"> </el-table-column>
+						<el-table-column prop="oilCode" label="油品代码"></el-table-column>
+						<el-table-column label="操作">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="国际化">
+						<el-input v-model="addLine.languageId" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+				
+					<el-form-item label="油品名">
+						<el-input v-model="addLine.oilName" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					
+					<el-form-item label="简称">
+						<el-input v-model="addLine.abbreviate" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					
+					<el-form-item label="油品代码">
+						<el-input v-model="addLine.oilCode" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;" @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+				
+				
+		</div>
+
+		<script src="../../js/modules/yunda/yfydoil.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

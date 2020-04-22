@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs yd-active">
+					临时授权记录
+				</div>
+				
+			</div>
+			<br/>
+			<div style="margin-top: 20px;margin-left: 20px;">
+				<el-form :inline="true" :model="formInline" class="demo-form-inline">
+			
+			
+					<el-form-item label="车辆">
+						<el-cascader :options="options" size="mini" v-model="formInline.selectedOptions"></el-cascader>
+					</el-form-item>
+					<el-form-item>
+						<!-- <el-date-picker v-model="formInline.selectDate" size="mini" type="date" placeholder="选择日期" :picker-options="pickerOptions0">
+						</el-date-picker> -->
+							<el-date-picker
+								size="mini"
+								v-model="formInline.time"
+								type="daterange"
+								align="right"
+								unlink-panels
+								range-separator="至"
+								start-placeholder="开始日期"
+								end-placeholder="结束日期"
+								:picker-options="pickerOptions">
+							</el-date-picker>
+					</el-form-item>
+			
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="onSubmit">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<template>
+				<el-table v-loading="loading" :data="tableData" style="width: 100%">
+					<el-table-column prop="lpn" label="车辆" width="100"></el-table-column>
+					<el-table-column label="授权量" width="100">
+						<template slot-scope="scope">
+							<span style="">{{ scope.row.planNumber }}</span>
+							<span style="margin-left: 2px;font-style: oblique;">L</span>
+						</template>
+					</el-table-column>
+					<el-table-column prop="userName" label="操作人" width="100"> </el-table-column>
+					<el-table-column label="操作日期" width="190">
+						<template slot-scope="scope">
+							<i class="el-icon-time"></i>
+							<span style="margin-left: 10px">{{ scope.row.updateTime }}</span>
+						</template>
+					</el-table-column>
+					<el-table-column prop="remarks" label="备注"> </el-table-column>
+				</el-table>
+			</template>
+			<div style="height: 40px;"></div>
+			<div class="page-footer">
+				<div style="">
+					<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+					 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+					</el-pagination>
+				</div>
+			</div>
+
+		</div>
+
+		<script src="../../js/modules/yunda/yfybtemporaryauthinfo.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+	.page-footer {
+	
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+	
+		/*  */
+	}
+	
+	.page-footer-nav {
+		margin-right: 10%;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+		font-size: 14px;
+	}
+	
+	.block {
+		margin-top: 20px;
+		width: 100%;
+	}
+	
+	.block .r_btn {
+		float: left;
+		width: 90px;
+	}
+	
+	.block .r_page {
+		float: right;
+	}
+</style>

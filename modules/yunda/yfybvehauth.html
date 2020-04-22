@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>系统日志</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body>
+		<div id="app" v-cloak>
+
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs yd-active">
+					计划授权
+				</div>
+				
+			</div>
+			<br/>
+			<div style="margin-top: 20px;margin-left: 20px;">
+				<el-form :inline="true" :model="formInline" class="demo-form-inline">
+			
+			
+					<el-form-item label="车辆">
+						<el-cascader :options="options" size="small" v-model="formInline.selectedOptions"></el-cascader>
+					</el-form-item>
+			
+					<el-form-item label="余量">
+						<el-input-number size="small" v-model="formInline.min" ></el-input-number>至
+						<el-input-number size="small" v-model="formInline.max" ></el-input-number>
+					</el-form-item>
+					
+					<el-form-item>
+						<el-button type="primary" size="small" @click="onSubmit">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="small">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<template>
+				<el-table v-loading="loading" :data="tableData" style="width: 100%">
+					<el-table-column prop="departname" label="油站名" width='200'></el-table-column>
+					<el-table-column prop="lpn" label="车牌号" width='100'></el-table-column>
+					<el-table-column prop="oil" label="油品" width='80'></el-table-column>
+					<el-table-column prop="tankCapacity" label="油箱容量" width='80'> </el-table-column>
+					<el-table-column prop="planNumber" label="计划授权量" width='100'></el-table-column>
+					<el-table-column prop="cycle" label="授权周期" width='80'></el-table-column>
+					<el-table-column prop="surplus" label="剩余授权量"></el-table-column>
+					<el-table-column label="操作" width=250>
+						<template slot-scope="scope">
+							<el-button size="small" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+							<el-button size="small" type="danger" @click="handle2Edit(scope.$index, scope.row)">临时授权</el-button>
+							<!-- <el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">详情</el-button> -->
+						</template>
+					</el-table-column>
+				</el-table>
+			</template>
+			<div style="height: 40px;"></div>
+			<div class="page-footer">
+				<div style="background: #FFFFFF;">
+					<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+					 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+					</el-pagination>
+				</div>
+			</div>
+
+			<el-dialog title="修改" :visible.sync="updateDialog" width="50%">
+				
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>车牌号：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+					  <el-input placeholder="" v-model="updateInline.lpn" clearable size="small" :disabled="true"></el-input>
+				  </el-col>
+				</el-row>
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>授权周期：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+					  
+					  <el-select v-model="updateInline.cycleData" placeholder="请选择" size="small"> 
+						<el-option 
+							v-for="item in updateInline.cycle" 
+							:key="item.value"
+							:label="item.label"
+							:value="item.value"
+							>
+						</el-option>
+					  </el-select>
+				  </el-col>
+				</el-row>
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>授权量：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+					  <el-input placeholder="" v-model="updateInline.planNumber" clearable size="small"></el-input>
+				  </el-col>
+				</el-row>
+				
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="updateDialog = false">取 消</el-button>
+					<el-button type="primary" @click="updateSubmit">确 定</el-button>
+				</div>
+				
+			</el-dialog>
+			
+			<el-dialog title="修改" :visible.sync="update2Dialog" width="50%">
+				
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>车牌号：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+					  <el-input placeholder="" v-model="updateInline.lpn" clearable size="small" :disabled="true"></el-input>
+				  </el-col>
+				</el-row>
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>油箱容量：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+					  <el-input placeholder="" v-model="updateInline.tankCapacity" clearable size="small" :disabled="true"></el-input>
+				  </el-col>
+				</el-row>
+				
+				<el-row class="yd-form-row">
+				  <el-col :span="5" class="yd-form-label">
+					  <font>临时授权量：</font>
+				  </el-col>
+				  <el-col :span="19" class="yd-form-value">
+				  		<el-input placeholder="" v-model="updateInline.newPlan" clearable size="small"></el-input>
+				  </el-col>
+				  <!-- <el-col :span="19" class="yd-form-value">
+					  <el-input placeholder="" v-model="updateInline.newPlanNumber" clearable size="small"></el-input>
+				  </el-col> -->
+				</el-row>
+				
+				<div slot="footer" class="dialog-footer">
+					<el-button @click="update2Dialog = false">取 消</el-button>
+					<el-button type="primary" @click="update2Submit">确 定</el-button>
+				</div>
+				
+			</el-dialog>
+
+		</div>
+
+		<script src="../../js/modules/yunda/yfybvehauth.js"></script>
+	</body>
+</html>
+<style>
+	.yd-form-row{
+		margin: 10px;
+	}
+	.yd-form-label{
+		line-height: 32px;
+		text-align: right;
+	}
+	.yd-form-value{
+		
+	}
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+	.page-footer {
+	
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+	
+		/*  */
+	}
+	
+	.page-footer-nav {
+		margin-right: 10%;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+		font-size: 14px;
+	}
+	
+	.block {
+		margin-top: 20px;
+		width: 100%;
+	}
+	
+	.block .r_btn {
+		float: left;
+		width: 90px;
+	}
+	
+	.block .r_page {
+		float: right;
+	}
+</style>

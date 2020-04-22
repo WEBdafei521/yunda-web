@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../../libs/vue.js"></script>
+		<script src="../../../plugins/elementUI/index.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					油枪管理
+				</div>
+				<div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					添加油枪
+				</div>
+			</div>
+			<br />
+			<div v-show="showList">
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%">
+						<el-table-column prop="gunNo" label="枪号" width="50"></el-table-column>
+						<el-table-column prop="intelligentModuleNo" label="智能控制器编号" width="140"></el-table-column>
+						<!-- <el-table-column prop="motherboardNo" label="主板编号"></el-table-column>
+						<el-table-column prop="motherboardType" label="主板类型"></el-table-column>
+						<el-table-column prop="linkAddress" label="链接地址"></el-table-column>
+						<el-table-column prop="pcPort" label="PC端口"></el-table-column> -->
+						<el-table-column prop="tankNo" label="罐号" width="50"></el-table-column>
+						<el-table-column prop="price" label="单价" width="50"></el-table-column>
+						<el-table-column prop="oil" label="油品" width="50"></el-table-column>
+						<el-table-column prop="beginAccount" label="期初升泵码" width="90"></el-table-column>
+						<el-table-column label="是否启用">
+							<template slot-scope="scope">
+								<el-button size="mini" type="success">已启用</el-button>
+							</template>
+						</el-table-column>
+						<el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button> -->
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+			</div>
+
+			<div v-show="!showList" style="text-align: center;max-width: 500px;margin-top: 30px;" >
+				
+				<el-form :inline="true" :model="formInline" label-width="200px" class="demo-form-inline" size="mini">
+					<el-form-item label="油枪编号">
+						<el-input v-model="formInline.gunNo" placeholder="" style="width: 200px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="智能控制器编号">
+						<el-input v-model="formInline.intelligentModuleNo" placeholder="请输入" style="width: 200px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="罐号">
+						<!-- <el-select v-model="formInline.tankNo" placeholder="请选择" style="width: 200px;">
+							<el-option label="01" value="01"></el-option>
+							<el-option label="02" value="02"></el-option>
+							<el-option label="03" value="03"></el-option>
+						</el-select>
+						 -->
+						<el-select v-model="formInline.tankNo" placeholder="请选择">
+							<el-option label="01" value="01">
+								<span style="float: left">01</span>
+								<span style="float: right; color: #8492a6; font-size: 13px">0#柴油</span>
+							</el-option>
+							<el-option label="02" value="02">
+								<span style="float: left">02</span>
+								<span style="float: right; color: #8492a6; font-size: 13px">-10#柴油</span>
+							</el-option>
+							<el-option label="03" value="03">
+								<span style="float: left">03</span>
+								<span style="float: right; color: #8492a6; font-size: 13px">-20#柴油</span>
+							</el-option>
+					  </el-select>
+						
+					</el-form-item>
+					<br />
+					<el-form-item label="期初升泵码">
+						<el-input v-model="formInline.simNo" placeholder="请输入" style="width: 200px;"></el-input>
+					</el-form-item>
+					<br />
+				</el-form>
+				<div style="height: 30px;"></div>
+				<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+				<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				
+				
+			</div>
+		</div>
+
+		<script src="../../../js/modules/yunda/equipment/oilGun.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+	.page-footer{
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>

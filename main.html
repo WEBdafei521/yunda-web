@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>油站首页</title>
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="css/layui.css" />
+		<style type="text/css">
+			html,
+			#app_main {
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				background: #ffffff;
+			}
+
+			#map {
+				width: 100%;
+				height: 100vh;
+			}
+			.adminShow {
+				position:fixed;top:10px;width: 100%;
+			}
+			#map1{
+				position: absolute;
+				bottom: 30px;
+				left: 30px;
+				/* color:#ffffff; */
+				z-index: 999;
+				width: 23vw;
+				height: 40vh;
+				/* background-color:white ; */
+				overflow: hidden;
+				border-radius: 16px;
+			}
+			.main_top{
+				position: absolute;
+				top:40px;
+				right:0;
+				width: 100%;
+				z-index: 99999;
+				background-color: transparent;
+			}
+			.main_top>.title{
+				width: 100%;
+				text-align: center;
+				display: flex;
+				/* justify-content: center; */
+			}
+			.main_top>.title>div{
+				width: 200px;
+				text-align: center;
+				font-size: 18px;
+				color: #8FE7B4;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app_main">
+			<div id="map" v-if="oilAdminFlag"></div>
+			<div class="main_top" v-if="oilAdminFlag">
+				<div class="title">
+					<div>
+						<img src="img/today.png" alt="">
+						设备 <span style="font-size: 28px;font-weight: bold;"> 13 </span>  台</div>
+					<div>今天销售 <span style="font-size: 28px;font-weight: bold;"> 0 </span> L</div>
+				</div>
+			</div>
+			<div id="map1" v-if="oilAdminFlag"></div>
+			<el-row id="headInfo" class="">
+				<el-col :span="6"  v-if="!isOilAdmin">
+					<div style="height: 150px;border-right-width: 2px;border-right-color: #c0c4cc;border-right-style: groove">
+						<div class="h-r">
+							<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+								<img v-if="departInfo.logo" :src="departInfo.logo" style="width: 80%;">
+								<img v-else src="img/main/station-logo.png" style="width: 80%;">
+							     	
+							</div>
+						</div>
+						<div style="width: 50%;float: left;height: 150px;background: #fff;display: table;">
+							<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+								<!-- <font style="font-size: 8px;">缴费类型：</font>
+								<font style="color: green;font-size: 8px;">服务费</font> -->
+								<el-row>
+								  <el-col :span="24" v-model="departName">
+								  	<p v-text="departInfo.departname"></p>
+								  </el-col>
+								</el-row>
+							</div>
+						</div>
+					</div>
+				</el-col>
+				<el-col :span="18">
+					<div style="height: 150px;" v-if="!isOilAdmin">
+						<el-row>
+							<el-col :span="8">
+								<div class="h-r">
+									<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+										<img src="img/main/jinyou.png" style="width: 80%;">
+									</div>
+								</div>
+								<div style="width: 50%;float: left;height: 150px;background: #fff;display: table;">
+									<div id="jinyou" style="display: table-cell;vertical-align: middle;">
+										<p class="h-number"  v-text="departInfo.sum_unload_oil_num"></p>
+										<font>今日进油(L)</font>
+									</div>
+								</div>
+							</el-col>	
+							<el-col :span="8">
+								<div class="h-r">
+									<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+										<img src="img/main/xiaoshou.png" style="width: 80%;">
+									</div>
+								</div>
+								<div style="width: 50%;float: left;height: 150px;background: #fff;display: table;">
+									<div id="xiaoshou" style="display: table-cell;vertical-align: middle;">
+										<p class="h-number"  v-text="departInfo.sum_qty"></p>
+										<font>今日销售(L)</font>
+									</div>
+								</div>
+							</el-col>	
+							<el-col :span="8">
+								<div class="h-r">
+									<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+										<img src="img/main/kucun.png" style="width: 80%;">
+									</div>
+								</div>
+								<div style="width: 50%;float: left;height: 150px;background: #fff;display: table;">
+									<div id="kucun" style="display: table-cell;vertical-align: middle;">
+										<p class="h-number"  v-text="departInfo.sum_tank_num"></p>
+										<font>今日库存(L)</font>
+									</div>
+								</div>
+							</el-col>	
+						</el-row>
+					</div>
+
+					<div style="margin-left: 10px;" v-if="isOilAdmin">
+						<el-row>
+							<!-- <el-col :span="6">
+								<div class="h-r" style="background: #ffffff;">
+									<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+										<img src="img/main/shebei.png" style="width: 80%;">
+									</div>
+								</div>
+								<div style="width: 50%;float: left;height: 150px;background: #ffffff;display: table;">
+									<div id="jinyou" style="display: table-cell;vertical-align: middle;">
+										<p class="h-number"  v-text="list_controller.length"></p>
+										<font>所有设备</font>
+									</div>
+								</div>
+							</el-col>	
+							<el-col :span="6">
+								<div class="h-r" style="background: #ffffff;">
+									<div id="imgbox" style="display: table-cell;vertical-align: middle;">
+										<img src="img/main/xiaoshou.png" style="width: 80%;">
+									</div>
+								</div>
+								<div style="width: 50%;float: left;height: 150px;background: #ffffff;display: table;">
+									<div id="xiaoshou" style="display: table-cell;vertical-align: middle;">
+										<p class="h-number"  v-text="departInfo.sum_qty"></p>
+										<font>今日销售(L)</font>
+									</div>
+								</div>
+							</el-col>	 -->
+						</el-row>
+					</div>
+				</el-col>
+			</el-row>
+
+			<el-row style="margin-top: 10px;" v-if="oilStationFlag">
+				<el-col :sm="{span: 13, offset: 5}" :md="{span: 11, offset:0}">
+					<div id="" class="col-title">
+						<font>加油机状态</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_controller" style="width: 100%">
+							<el-table-column prop="gunNo" label="枪号" align="center" min-width="80" :formatter="dataFormatter"></el-table-column>
+							<el-table-column prop="status1" label="状态" align="center" min-width="100">
+								<template slot-scope="scope">
+							    <img v-if="scope.row.status1=='00'" src="img/un_oil.png" alt="挂枪" style="width: 20px;">
+									<img v-if="scope.row.status1=='22'" src="img/oil.png" alt="加油"  style="width: 20px;">
+									<img v-if="scope.row.status1=='' || scope.row.status1==null " alt="未连接"  src="img/not_conn.png" style="width: 20px;">
+							     	
+							  </template>
+						  </el-table-column>
+							<el-table-column prop="price" label="单价" align="center" min-width="100"></el-table-column>
+							<el-table-column prop="goodsName" label="油品" align="center" min-width="100"></el-table-column>
+							<el-table-column prop="tankNo" label="油罐" align="center" min-width="100"></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+				<el-col :sm="{span: 13, offset: 5}" :md="{span: 11, offset: 1}">
+					<div id="" class="col-title">
+						<font>油罐状态</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_tank" style="width: 100%">
+							<el-table-column prop="tankNo" label="罐号" align="center" min-width="120" :formatter="dataFormatter"></el-table-column>
+							<el-table-column prop="isLiquidLevelMeter" align="center" label="状态" min-width="120">
+								<template slot-scope="scope">
+							     	<p v-if="scope.row.isLiquidLevelMeter=='0'">无液位</p>
+							     	<p v-else>有液位</p>
+							     </template>
+						     </el-table-column>
+							<el-table-column prop="goodsName" label="油品" align="center" min-width="120"></el-table-column>
+							<el-table-column prop="tankNum" label="罐存" align="center" min-width="120"></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+				
+			</el-row>
+			
+			<el-row style="margin-top: 10px;"  v-if="oilStationFlag">
+				<el-col :sm="{span: 13, offset: 5}" :md="{span: 11, offset: 0}">
+					<div id="" class="col-title">
+						<font>库存报警</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_tank_alarm" style="width: 100%">
+							<el-table-column prop="tankNo" label="罐号" align="center" min-width="120" :formatter="dataFormatter"></el-table-column>
+							<el-table-column prop="isLiquidLevelMeter" label="告警类型" width="120">
+								<template slot-scope="scope">
+								
+							     	<p v-if="scope.row.alarmType=='0'">低油位告警</p>
+							     	<p v-if="scope.row.alarmType=='1'">高油位告警</p>
+							     </template>
+						     </el-table-column>
+							<el-table-column prop="goodsName" label="油品" align="center" min-width="120"></el-table-column>
+							<el-table-column prop="tankNum" label="罐存" align="center" min-width="120"></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+				<el-col :sm="{span: 13, offset: 5}" :md="{span: 11, offset: 1}">
+					<div id="" class="col-title">
+						<font>到期提醒</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_serviceDate" style="width: 100%">
+							<el-table-column prop="departname" label="油站" align="center" min-width="150"></el-table-column>
+							<el-table-column prop="servicedate" label="到期时间" align="center" min-width="150"></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+			</el-row>
+			
+			<!-- 从这里开始写石油公司需要展示的内容 -->
+			<el-row :gutter="0" style="margin-top: 10px;" v-if="oilCompanyFlag">
+				<el-col :sm="{span:18, offset: 2}" :md="{span: 11, offset: 0}">
+					<div id="" class="col-title">
+						<font>今日库存提醒</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_companyList" style="width:100%;">
+							<el-table-column align="center" prop="departname" label="油站" min-width="120"></el-table-column>
+							<el-table-column align="center" prop="goods_name" label="油品" min-width="120"></el-table-column>
+							<el-table-column align="center" prop="sum_unload_oil_num" label="进油" min-width="120"></el-table-column>
+							<el-table-column align="center" prop="sum_qty" label="销售" min-width="120"></el-table-column>
+							<el-table-column align="center" prop="sum_tank_num" label="库存" min-width=""></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+				<el-col :sm="{span: 18, offset: 2}" :md="{span: 11, offset: 1}">
+					<div id="" class="col-title">
+						<font>到期提醒</font>
+					</div>
+					<div>
+						<el-table size=""  :data="list_serviceDate" style="width:100%;">
+							<el-table-column align="center" prop="departname" label="油站" min-width="120"></el-table-column>
+							<el-table-column align="center" prop="servicedate" label="到期时间" min-width="120"></el-table-column>
+						</el-table>
+					</div>
+				</el-col>
+			</el-row>
+			<!-- 石油公司需要展示的内容，结束 -->
+		</div>
+	</body>
+</html>
+<script src="js/jquery.min.js"></script>
+<script src="libs/vue.js"></script>
+<script src="plugins/elementUI/index.js"></script>
+<script src="plugins/layer/layer.js"></script>
+<script src="plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="js/common.js"></script>
+<style>
+	.h-r{
+		width: 40%;
+		float: left;
+		height: 150px;
+		background: #fff;
+		display: table;
+		text-align: center;
+	}
+	#jinyou{
+		color: #d88a28;
+	}
+	#xiaoshou{
+		color: #027b7c;
+	}
+	#kucun{
+		color: #a15b53;
+	}
+	.col-title{
+		background:#eaeaea ;
+		height: 30px;
+		width: 100%;
+		text-align: center;
+	}
+	.col-title font{
+		line-height: 30px;
+	}
+	.col-tr{
+		line-height: 15px;
+		text-align: center;
+		color: #606266;
+		font-size: 14px;
+	}
+	.h-number{
+		font-size: 30px;
+		font-weight: 600;
+	}
+</style>
+<script src="js/main.js"></script>
+<script src="https://cdn.bootcss.com/echarts/4.2.1-rc1/echarts.min.js"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=YIyxOxPhOU1ZDF8iIgi2tO3R5FDNxr48"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?type=webgl&v=1.0&ak=YIyxOxPhOU1ZDF8iIgi2tO3R5FDNxr48"></script>
+<script src="./js/china.js"></script>
+<!-- 首页地图 -->
+<!-- <script type="text/javascript">
+ // GL版命名空间为BMapGL
+ var map = new BMapGL.Map("map");    // 创建Map实例
+	map.centerAndZoom(new BMapGL.Point(118.5, 27.5), 5);  // 初始化地图,设置中心点坐标和地图级别
+	map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+	map.setMapType(BMAP_EARTH_MAP);      // 设置地图类型为地球模式
+</script> -->
+
+<script type="text/javascript">
+		// 批量逆地址解析
+		console.log(sessionStorage.getItem('position'))
+		var positions = [];
+		const str = sessionStorage.getItem('position');
+		// console.log(str)
+	  function getGps(resolve,reject){
+			// 所有的经纬度
+			var adds = [];
+			// 批量逆地址解析
+			var po = JSON.parse(str)
+			for(var i=0;i<po.length;i++){
+				adds.push(new BMap.Point(po[i].lon,po[i].lat))
+			}
+			resolve(adds);
+		}
+		function getlocations(data){
+			return new Promise(function(resolve,reject){
+				var myGeo = new BMap.Geocoder();
+				for(var i=0;i<data.length;i++){
+					myGeo.getLocation(data[i], function(rs){
+						positions.push(rs.addressComponents)
+						if(positions.length == data.length){
+							resolve(positions)
+						}
+					});
+				}
+			})
+		}
+
+		// 基于promise 实现
+		var result = new Promise(getGps)
+		.then(res=>{
+			getlocations(res).then(position=>{
+				var str = sessionStorage.getItem('position')
+				var po = JSON.parse(str)
+				var position_arr = position;
+				var Gps_arr = po;
+				var location_info = []
+				for(var i=0;i<position_arr.length;i++){
+					location_info.push({name:position_arr[i].city,value:[Gps_arr[i].lon,Gps_arr[i].lat],stateInfo:Gps_arr[i]})
+				}
+
+				// 基于准备好的dom，初始化echarts实例
+				var myChart = echarts.init(document.getElementById('map'));
+				var mapName = 'china'
+				var data = [];
+				var convertData = function(data){return data;};
+				option = {
+					backgroundColor: '#002C78',
+					tooltip: {
+							padding: 0,
+							enterable: true,
+							transitionDuration: 1,
+							textStyle: {
+									color: '#000',
+									decoration: 'none',
+							},
+							formatter: function(params) {
+								console.log(params)
+									if(params.data){
+										var devStatus="在线";
+										var updateTime = params.data.stateInfo.updateTime;
+										var d1 = new Date(Date.parse(updateTime)); 
+										console.log(d1)
+										//目前只根据时间判断，2分钟
+										if(new Date() - d1 > 1000*60*2){
+											devStatus= "离线";
+										}
+										var tipHtml = '';
+										var departInfo = deptFun.getDeptInfoByOrgCode(params.data.stateInfo.orgCode);
+										// console.log(departInfo)
+										console.log(params)
+										tipHtml = '<div style="width:280px;height:180px;background:rgba(22,80,158,0.8);border:1px solid rgba(7,166,255,0.7)">'
+										+'<div style="width:100%;height:40px;line-height:40px;border-bottom:2px solid rgba(7,166,255,0.7);padding:0 20px;box-sizing: border-box">'+'<i style="display:inline-block;width:8px;height:8px;background:#16d6ff;border-radius:40px;">'+'</i>'
+										+'<span style="margin-left:10px;color:#fff;font-size:16px;">'+departInfo.address+'</span>'+'</div>'
+										+'<div style="padding:20px">'
+										+'<p style="color:#fff;font-size:12px;">'+'<i style="display:inline-block;width:10px;height:10px;background:#16d6ff;border-radius:40px;margin:0 8px">'+'</i>'
+										+'站点名称：'+'<span style="color:#11ee7d;margin:0 6px;">'+departInfo.departname+'</span>'+''+'</p>'
+										+'<p style="color:#fff;font-size:12px;">'+'<i style="display:inline-block;width:10px;height:10px;background:#16d6ff;border-radius:40px;margin:0 8px">'+'</i>'
+										+'联系人：'+'<span style="color:#f48225;margin:0 6px;">'+departInfo.attn+'</span>'+''+'</p>'
+										+'<p style="color:#fff;font-size:12px;">'+'<i style="display:inline-block;width:10px;height:10px;background:#16d6ff;border-radius:40px;margin:0 8px">'+'</i>'
+										+'联系电话：'+'<span style="color:#f4e925;margin:0 6px;">'+departInfo.mobile+'</span>'+''+'</p>'
+										+'<p style="color:#fff;font-size:12px;">'+'<i style="display:inline-block;width:10px;height:10px;background:#16d6ff;border-radius:40px;margin:0 8px">'+'</i>'
+										+'设备号：'+'<span style="color:#25f4f2;margin:0 6px;">'+params.data.stateInfo.controllerNo+'</span>'+''+'</p>'
+										+'<p style="color:#fff;font-size:12px;">'+'<i style="display:inline-block;width:10px;height:10px;background:#16d6ff;border-radius:40px;margin:0 8px">'+'</i>'
+										+'设备号：'+'<span style="color:#25f4f2;margin:0 6px;">'+devStatus+'</span>'+''+'</p>'
+										+'</div>'+'</div>';
+										// setTimeout(function() {
+										//     tooltipCharts(params.name);
+										// }, 10);
+										return tipHtml;
+									}else{
+										var tipHtml = '';
+										tipHtml = '<div style="color:#fff;">'+params.name+':暂无数据</div>'
+										return  tipHtml
+									}
+							}
+					},
+				
+					visualMap: {
+							show: false,
+							min: 0,
+							max: 300,
+							left: '30%',
+							top: '0%',
+							calculable: true,
+							seriesIndex: [1],
+							inRange: {
+									color: ['#04387b', '#467bc0'] // 蓝绿
+							}
+					},
+					geo: {
+							show: true,
+							map: mapName,
+							label: {
+									normal: {
+											show: false
+									},
+									emphasis: {
+											show: false,
+									}
+							},
+							// 设置地图的可移动性，这里设置不可移动
+							roam: true,
+							itemStyle: {
+									normal: {
+											areaColor: '#023677',
+											borderColor: '#1180c7',
+											shadowColor: 'rgba(0,54,255, .5)',
+                			shadowBlur: 60
+									},
+									emphasis: {
+											areaColor: '#4499d0',
+									}
+							}
+					},
+					series: [{
+									name: '散点',
+									type: 'scatter',
+									coordinateSystem: 'geo',
+									data: convertData(location_info),
+									symbolSize: function(val) {
+											return val[2]/3;
+									},
+									label: {
+											normal: {
+													formatter: '{b}',
+													position: 'right',
+													show: true
+											},
+											emphasis: {
+													show: true
+											}
+									},
+									itemStyle: {
+											normal: {
+													color: '#fff'
+											}
+									}
+							},
+							{
+									type: 'map',
+									map: mapName,
+									geoIndex: 0,
+									aspectScale: 0.75, //长宽比
+									showLegendSymbol: false, // 存在legend时显示
+									label: {
+											normal: {
+													show: true
+											},
+											emphasis: {
+													show: false,
+													textStyle: {
+															color: '#fff'
+													}
+											}
+									},
+									roam: true,
+									itemStyle: {
+											normal: {
+													areaColor: '#031525',
+													borderColor: '#3B5077',
+											},
+											emphasis: {
+													areaColor: '#2B91B7'
+											}
+									},
+									animation: false,
+									data: location_info
+							},
+							{
+									name: '点',
+									type: 'scatter',
+									coordinateSystem: 'geo',
+									zlevel: 6,
+							},
+							{
+									name: 'Top 5',
+									type: 'effectScatter',
+									coordinateSystem: 'geo',
+									data: convertData(location_info.sort(function(a, b) {
+											return b.value - a.value;
+									}).slice(0, 10)),
+									symbolSize: function(val) {
+											return val[1]/3;
+									},
+									showEffectOn: 'render',
+									rippleEffect: {
+											brushType: 'stroke'
+									},
+									hoverAnimation: true,
+									label: {
+											normal: {
+													formatter: '{b}',
+													position: 'left',
+													show: false
+											}
+									},
+									itemStyle: {
+											normal: {
+													color: 'yellow',
+													shadowBlur: 10,
+													shadowColor: 'yellow'
+											}
+									},
+									zlevel: 1
+							},
+					]
+				};
+				// 使用刚指定的配置项和数据显示图表。
+				myChart.setOption(option);
+			})
+		})
+		
+</script>
+<!-- 左下角柱状图 -->
+<script type="text/javascript">
+	var myChart = echarts.init(document.getElementById('map1'));
+	
+	option = {
+			backgroundColor: "rgba(56,68,94,.4)",
+			grid: {
+			left: '12%',
+			top: '5%',
+			bottom: '12%',
+			right: '8%'
+		},
+			xAxis: {
+				data: ['驯鹿', '火箭', '飞机', '高铁', '轮船', ],
+				axisTick: {
+				show: false
+			},
+			axisLine: {
+				lineStyle: {
+					color: 'rgba(255, 129, 109, 0.1)',
+					width: 1 //这里是为了突出显示加上的
+				}
+			},
+			axisLabel: {
+				textStyle: {
+					color: '#999',
+					fontSize: 12
+				}
+			}
+			},
+			yAxis: [{
+				splitNumber: 2,
+				axisTick: {
+					show: false
+				},
+				axisLine: {
+					lineStyle: {
+						color: 'rgba(255, 129, 109, 0.1)',
+						width: 1 //这里是为了突出显示加上的
+					}
+				},
+				axisLabel: {
+					textStyle: {
+						color: '#999'
+					}
+				},
+				splitArea: {
+					areaStyle: {
+						color: 'rgba(255,255,255,.1)'
+					}
+				},
+				splitLine: {
+					show: true,
+					lineStyle: {
+						color: 'rgba(255, 129, 109, 0.1)',
+						width: 0.5,
+						type: 'dashed'
+					}
+				}
+			}
+		],
+			series: [{
+					name: 'hill',
+					type: 'pictorialBar',
+					barCategoryGap: '0%',
+					symbol: 'path://M0,10 L10,10 C5.5,10 5.5,5 5,0 C4.5,5 4.5,10 0,10 z',
+					label: {
+				show: true,
+				position: 'top',
+				distance: 15,
+				color: '#DB5E6A',
+				fontWeight: 'bolder',
+				fontSize: 20,
+			},
+			itemStyle: {
+					normal: {
+						color: {
+							type: 'linear',
+							x: 0,
+							y: 0,
+							x2: 0,
+							y2: 1,
+							colorStops: [{
+									offset: 0,
+									color: 'rgba(232, 94, 106, .8)' //  0%  处的颜色
+								},
+								{
+									offset: 1,
+									color: 'rgba(232, 94, 106, .1)' //  100%  处的颜色
+								}
+							],
+							global: false //  缺省为  false
+						}
+					},
+					emphasis: {
+						opacity: 1
+					}
+			},
+					data: [123, 60, 25, 18, 12],
+					z: 10
+			}]
+	};
+
+	myChart.setOption(option);
+</script>
+<!-- 原始页面 -->
+<!-- 
+<script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=j5SrRGiWlKE3FzQmBOw1MFOWMttm1xya"></script>
+<script type="text/javascript" src="http://lbsyun.baidu.com/jsdemo/data/points-sample-data.js"></script>
+<script type="text/javascript">
+			
+			// var str = sessionStorage.getItem('position');
+			// var po = JSON.parse(str)
+			// console.log(po)
+// 			if(po){
+// 				$("#outnum").text(po.length);
+// 				$("#select_num").text(po.length);
+// 				var htmlOr___ = "";
+// 				for(var i = 0; i < po.length; i++) {
+// 					htmlOr___ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 						'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 						'</li>';
+// 				};
+// 				$("#outletslist").html(htmlOr___);
+// 				var opts = {
+// 					width: 265, // 信息窗口宽度
+// 					height: 205, // 信息窗口高度
+// 					//title : "信息窗口" , // 信息窗口标题
+// 					enableMessage: true //设置允许信息窗发送短息
+// 				};
+// 				var marker1;
+					
+// 				var map = new BMap.Map("map", {}); // 创建Map实例
+// 				map.centerAndZoom(new BMap.Point(105.000, 38.000), 5); // 初始化地图,设置中心点坐标和地图级别
+// 				map.enableScrollWheelZoom(); //启用滚轮放大缩小
+// 				var mapStyle = {
+// 					features: ["road", "building", "water", "land"], //隐藏地图上的poi
+// 					style: "#000000" // 设置地图风格为高端黑
+// 				}
+// 				map.setMapStyle(mapStyle);
+
+// 				if(document.createElement('canvas').getContext) { // 判断当前浏览器是否支持绘制海量点
+// 					hld_point(po)
+// 				} else {
+// 					alert('请在chrome、safari、IE8+以上浏览器查看本示例');
+// 				}
+// 			}
+			
+
+// 			function hld_point(points__) {
+// 				var points = []; // 添加海量点数据
+// 				var points_ = []; // 红色得点点数据
+// 				var points_chuanhua = []; // 传化
+// 				for(var i = 0; i < points__.length; i++) {
+// 						//在线的显示绿色，掉线的显示红色
+// 						var updateTime = points__[i].updateTime;
+// 						var d1 = new Date(Date.parse(updateTime)); 
+// 						//目前只根据时间判断，2分钟
+// 						if(new Date() - d1 > 1000*60*2){
+// 							points_.push(new BMap.Point(points__[i].longitude, points__[i].latitude));
+// 						}else{
+// 							points.push(new BMap.Point(points__[i].longitude, points__[i].latitude));
+// 						}
+						
+// 				}
+// 				var options = {
+// 					size: BMAP_POINT_SIZE_BIG,
+// // 					shape: BMAP_POINT_SHAPE_RHOMBUS,
+// 					color: '#00ff00'
+// 				}
+// 				var pointCollection = new BMap.PointCollection(points, options); // 初始化PointCollection
+// 				pointCollection.addEventListener('click', function(e) {
+// 					console.log(e)
+// 					eq_point(e.point.lat, e.point.lng)
+// 				});
+// 				map.addOverlay(pointCollection); // 添加Overlay
+				
+// 				var options2 = {
+// 					size: BMAP_POINT_SIZE_BIG,
+// // 					shape: BMAP_POINT_SHAPE_RHOMBUS,
+// 					color: '#ff0000'
+// 				}
+// 				var pointCollection2 = new BMap.PointCollection(points_, options2); // 初始化PointCollection
+// 				pointCollection2.addEventListener('click', function(e) {
+// 					console.log(e)
+// 					eq_point(e.point.lat, e.point.lng)
+// 				});
+// 				map.addOverlay(pointCollection2); // 添加Overlay
+// 			}
+// 			/**
+// 			 * 
+// 			 */
+// 			function eq_point(lat, lng) {
+// 				console.log(lat,lng)
+// 				var point1 = new BMap.Point(lng, lat);
+// 				for(var i = 0; i < po.length; i++) {
+// 					if(po[i].longitude==lng&&po[i].latitude==lat){
+// 						openInfo(po[i]);
+// 					}
+// 				}
+// 			}
+
+// 			function openInfo(po__) {
+// 				var point = new BMap.Point( po__.longitude, po__.latitude);
+// 				console.log(point)
+// 				// debugger
+// 				var departInfo = deptFun.getDeptInfoByOrgCode(po__.orgCode);
+				
+// 				//判断设备是否在线，目前按照两分钟来看
+// 				var devStatus="在线";
+// 				var updateTime = po__.updateTime;
+// 				var d1 = new Date(Date.parse(updateTime)); 
+// 				//目前只根据时间判断，2分钟
+// 				if(new Date() - d1 > 1000*60*2){
+// 					devStatus= "离线";
+// 				}
+				
+// 				var content = '<div class="station_info">' +
+// 					'<div class="line_02"></div>' +
+// 					'站点：' + (departInfo.departname) +
+// 					'<br/>联系人：' + (departInfo.attn) +
+// 					'<br/>联系电话：' + (departInfo.mobile) +
+// 					'<br/>设备号：' + (po__.controllerNo) +
+// 					'<br/>状态：' + (devStatus) +
+// 					'</div>';
+// 				var infoWindow = new BMap.InfoWindow(content, opts); // 创建信息窗口对象 
+// 				map.openInfoWindow(infoWindow, point); //开启信息窗口
+// // 				var myIcon = new BMap.Icon(('yj.png'), new BMap.Size(25, 25));
+// 				var premarker = new BMap.Marker(point); // 创建标注
+// 				map.removeOverlay(marker1);
+// 				map.addOverlay(premarker); // 将标注添加到地图中
+// 				marker1 = premarker;
+// 				// addClickHandler(content, marker1);
+// 			}
+			
+// 			function go_info(i, ty) {
+// 				openInfo(po[i])
+// 			}
+
+// 			// $("#btn_srh_").click(function() {
+// 			// 	var inp_srh_val = $("#inp_srh_").val();
+// 			// 	var htmlOr_ = '';
+// 			// 	map.clearOverlays(); //清除其他的覆盖物
+
+// 			// 	var __points = [];
+// 			// 	for(var i = 0; i < po.length; i++) {
+// 			// 		var stationname = po[ 	].stationname;
+// 			// 		var inp_srh_val_p = new RegExp(inp_srh_val);
+// 			// 		var result = inp_srh_val_p.test(stationname);
+// 			// 		if(result) {
+// 			// 			__points.push(po[i])
+// 			// 			htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 			// 				'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 			// 				'</li>';
+// 			// 		}
+// 			// 	};
+// 			// 	hld_point(__points);
+// 			// 	$("#outletslist").html(htmlOr_);
+// 			// })
+
+// 			function find_street() {
+// 				var inp_srh_val = $("#street").val();
+// 				var htmlOr_ = '';
+// 				map.clearOverlays(); //清除其他的覆盖物
+// 				var count_ = 0;
+// 				var __points = [];
+// 				for(var i = 0; i < po.length; i++) {
+// 					var stationname = po[i].street;
+// 					var inp_srh_val_p = new RegExp(inp_srh_val);
+// 					var result = inp_srh_val_p.test(stationname);
+// 					if(result) {
+// 						count_ += 1;
+// 						__points.push(po[i])
+// 						htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 							'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 							'</li>';
+// 					}
+// 				};
+// 				hld_point(__points);
+// 				$("#select_num").text(count_);
+// 				$("#outletslist").html(htmlOr_);
+// 			}
+
+// 			function province10() {
+// 				var inp_srh_val = $("#province10").val();
+// 				var htmlOr_ = '';
+// 				map.clearOverlays(); //清除其他的覆盖物
+// 				getBoundary(inp_srh_val);
+// 				var count_ = 0;
+// 				var __points = [];
+// 				for(var i = 0; i < po.length; i++) {
+// 					var stationname = po[i].province;
+// 					var inp_srh_val_p = new RegExp(inp_srh_val);
+// 					var result = inp_srh_val_p.test(stationname);
+// 					if(result) {
+// 						count_ += 1;
+// 						__points.push(po[i])
+// 						htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 							'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 							'</li>';
+// 					}
+// 				};
+// 				hld_point(__points);
+// 				$("#select_num").text(count_);
+// 				$("#outletslist").html(htmlOr_);
+// 			}
+
+// 			function city10() {
+// 				var inp_srh_val = $("#city10").val();
+// 				var htmlOr_ = '';
+// 				map.clearOverlays(); //清除其他的覆盖物
+// 				getBoundary(inp_srh_val);
+// 				var count_ = 0;
+// 				var __points = [];
+// 				for(var i = 0; i < po.length; i++) {
+// 					var stationname = po[i].city;
+// 					var inp_srh_val_p = new RegExp(inp_srh_val);
+// 					var result = inp_srh_val_p.test(stationname);
+// 					if(result) {
+// 						count_ += 1;
+// 						__points.push(po[i])
+// 						htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 							'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 							'</li>';
+// 					}
+// 				};
+// 				hld_point(__points);
+// 				$("#select_num").text(count_);
+// 				$("#outletslist").html(htmlOr_);
+// 			}
+
+// 			function district10() {
+// 				var inp_srh_val = $("#district10").val();
+// 				var htmlOr_ = '';
+// 				map.clearOverlays(); //清除其他的覆盖物
+// 				var count_ = 0;
+// 				getBoundary(inp_srh_val);
+// 				var __points = [];
+// 				for(var i = 0; i < po.length; i++) {
+// 					var stationname = po[i].district;
+// 					var inp_srh_val_p = new RegExp(inp_srh_val);
+// 					var result = inp_srh_val_p.test(stationname);
+// 					if(result) {
+// 						count_ += 1;
+// 						__points.push(po[i])
+// 						htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 							'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 							'</li>';
+// 					}
+// 				};
+// 				hld_point(__points);
+// 				$("#select_num").text(count_);
+// 				$("#outletslist").html(htmlOr_);
+// 			}
+
+// 			function getBoundary(adds) {
+// 				var bdary = new BMap.Boundary();
+// 				bdary.get(adds, function(rs) { //获取行政区域
+// 					var count = rs.boundaries.length; //行政区域的点有多少个
+// 					if(count === 0) {
+// 						alert('未能获取当前输入行政区域');
+// 						return;
+// 					}
+// 					var pointArray = [];
+// 					for(var i = 0; i < count; i++) {
+// 						var ply = new BMap.Polygon(rs.boundaries[i], {
+// 							strokeWeight: 3,
+// 							fillOpacity: 0.02,
+// 							strokeColor: "#1092d9"
+// 						}); //建立多边形覆盖物
+// 						map.addOverlay(ply); //添加覆盖物
+// 						pointArray = pointArray.concat(ply.getPath());
+// 					}
+// 					map.setViewport(pointArray); //调整视野              
+// 				});
+// 			}
+
+// 			function find_mas() {
+// 				var inp_srh_val = $("#mas").val();
+// 				var htmlOr_ = '';
+// 				map.clearOverlays(); //清除其他的覆盖物
+// 				var count_ = 0;
+// 				var __points = [];
+// 				for(var i = 0; i < po.length; i++) {
+// 					var masterstation = po[i].masterstation;
+// 					if(masterstation.match(inp_srh_val) != null) {
+// 						count_ += 1;
+// 						__points.push(po[i])
+// 						htmlOr_ += '<li class="station_hover" onclick="go_info(' + i + ',1);">' +
+// 							'<h4><i class="icon_out"></i>' + po[i].stationname + '</h4>' +
+// 							'</li>';
+// 					}
+// 				};
+// 				hld_point(__points);
+// 				$("#select_num").text(count_);
+// 				$("#outletslist").html(htmlOr_);
+// 			}
+</script> -->

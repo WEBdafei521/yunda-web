@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline" size="mini">
+					<!-- <el-form-item label="部门">
+                        <el-cascader v-model="q.orgCode" :options="deptOptions" :show-all-levels="false"  :props="deptProps" clearable></el-cascader>
+                    </el-form-item> -->
+					<el-form-item label="石油公司" v-show="p.ocShow">
+						<el-select v-model="q.dept.oc" placeholder="请选择" style="width: 200px;" clearable @change="ocChange">
+							<el-option v-for="item in dept.oc" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="加油站">
+						<el-select v-model="q.dept.s" placeholder="请选择" style="width: 200px;" clearable>
+							<el-option v-for="item in dept.s" :key="item.orgCode" :label="item.departname" :value="item.orgCode"></el-option>
+						</el-select>
+					</el-form-item>
+					<el-form-item label="时间">
+						<el-date-picker
+								v-model="q.time"
+								confirm type="daterange"
+								align="right"
+								unlink-panels
+								range-separator="至"
+								start-placeholder="开始日期"
+								end-placeholder="结束日期"
+								:picker-options="pickerOptions">
+						</el-date-picker>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					调价记录
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					添加
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						<el-table-column prop="deptName" label="部门"></el-table-column>
+						<el-table-column prop="goodsName" label="油品"></el-table-column>
+						<el-table-column prop="gunIds" label="油枪号">
+							<template slot-scope="scope">
+								<template v-for="item in scope.row.gunIds.split(',')">
+									<el-tag v-if="item != ''" size="mini" type="success">{{item}}</el-tag>&nbsp;&nbsp;
+								</template>
+								<el-tag v-if="scope.row.gunIds == '' " size="mini" type="info">未修改油枪</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column label="老单价">
+							<template slot-scope="scope">
+								{{scope.row.oldPrice}} L/￥
+							</template>
+						</el-table-column>
+						<el-table-column prop="newPrice" label="新价格">
+							<template slot-scope="scope">
+								{{scope.row.newPrice}} L/￥
+							</template>
+						</el-table-column>
+						<el-table-column prop="updateUser" label="修改人"></el-table-column>
+						<el-table-column prop="updateTime" label="修改时间"></el-table-column>
+						<el-table-column prop="remarks" label="备注"></el-table-column>
+						<!-- <el-table-column label="操作">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="danger" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column> -->
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :model="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="部门">
+						<el-input v-model="addLine.orgCode" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="油品ID">
+						<el-input v-model="addLine.goodsId" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="油枪id">
+						<el-input v-model="addLine.gunIds" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="老单价">
+						<el-input v-model="addLine.oldPrice" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="新价格">
+						<el-input v-model="addLine.newPrice" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改人">
+						<el-input v-model="addLine.updateUser" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="修改时间">
+						<el-input v-model="addLine.updateTime" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="备注">
+						<el-input v-model="addLine.remarks" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;">重置</el-button>
+				</el-form>
+				
+			</div>
+				
+				
+		</div>
+
+		<script src="../../js/modules/goods/yfysgoodsinfo.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

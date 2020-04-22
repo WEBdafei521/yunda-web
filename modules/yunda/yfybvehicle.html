@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+		
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/layer/layer.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+		<script src="../../js/common.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<div style="margin-top: 0px;margin-left: 20px;">
+				<el-form :inline="true" :model="q" class="demo-form-inline">
+					<el-form-item label="车牌号">
+						<el-input v-model="q.lpn" size="mini" placeholder="车牌号"></el-input>
+					</el-form-item>
+					<!--<el-form-item label="车牌号" >-->
+						<!--<el-select v-model="q.lpn" placeholder="请选择" style="width: 200px;" clearable >-->
+							<!--<el-option v-for="item in tableData" :key="item.id" :label="item.lpn" :value="item.lpn"></el-option>-->
+						<!--</el-select>-->
+					<!--</el-form-item>-->
+
+					<el-form-item>
+						<el-button type="primary" size="mini" @click="query">查询</el-button>
+					</el-form-item>
+					<el-form-item>
+						<el-button v-show="p.exportShow" type="primary" size="mini" @click="exportData">导出数据</el-button>
+					</el-form-item>
+				</el-form>
+			</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-nav-tabs-active':showList}" @click="list">
+					列表
+				</div>
+				<div class="yd-nav-tabs" v-show="p.addShow" :class="{'yd-nav-tabs-active':!showList}" @click="add">
+					{{addOrUpdate}}
+				</div>
+			</div>
+			<br />
+			
+			
+			<div v-show="showList">
+				<template>
+					<el-table size="" v-loading="tableLoading" :data="tableData" style="width: 100%" >
+						
+						<el-table-column prop="id" label="id" width="50"></el-table-column>
+						<el-table-column prop="lpn" label="车牌号"></el-table-column>
+						<el-table-column prop="sim" label="SIM卡号"></el-table-column>
+						<el-table-column prop="devsn" label="设备号"></el-table-column>
+						<el-table-column prop="kmoil" label="百公里油耗(L)"></el-table-column>
+						<el-table-column prop="createDate" label="添加日期"></el-table-column>
+						<el-table-column prop="updateDate" label="修改日期"></el-table-column>
+						<el-table-column prop="tankCapacity" label="油箱容量(L)"></el-table-column>
+						<el-table-column prop="oilName" label="油品"></el-table-column>
+						<el-table-column prop="vin" label="车架号"></el-table-column>
+						<el-table-column prop="engine" label="发动机号"></el-table-column>
+						<el-table-column label="操作" width="180">
+							<template slot-scope="scope">
+								<el-button v-show="p.updateShow"  size="mini" type="primary" @click="updata(scope.$index, scope.row)">修改</el-button>
+								<el-button v-show="p.deleteShow"  size="mini" type="danger" @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+			
+			<div v-show="!showList" style="text-align: center;max-width: 600px;margin-top: 30px;">
+				<el-form :inline="true" :rules="rules"  :model="addLine" ref="addLine" label-width="200px" class="demo-form-inline" size="mini">
+					
+					<el-form-item label="车牌号" prop="lpn">
+						<el-input v-model="addLine.lpn"  placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!-- <el-form-item label="车辆类别">
+						<el-input v-model="addLine.vehlb" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br /> -->
+					<el-form-item label="SIM卡号">
+						<el-input v-model="addLine.sim" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="设备号">
+						<el-input v-model="addLine.devsn" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="百公里油耗(L)">
+						<el-input v-model.number="addLine.kmoil" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!-- <el-form-item label="车主">
+						<el-input v-model="addLine.owner" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="手机号码">
+						<el-input v-model="addLine.mphone" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br /> -->
+					<el-form-item label="油箱容量(L)" prop="tankCapacity">
+						<el-input v-model.number="addLine.tankCapacity" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<!-- <el-form-item label="油品" prop="oilCode">
+						<el-select v-model="addLine.oilCode" placeholder="请选择" style="width: 300px;" @change="oilChange">
+							<el-option v-for="item in goodsOption" :key="item.id" :label="item.goodsName" :value="item.id"></el-option>
+						</el-select>
+					</el-form-item> -->
+					<el-form-item label="油品" prop="oilCode">
+						<div @click="oilTree">
+							<el-input v-model="addLine.oilCode" :disabled="false" placeholder="请选择" style="width: 300px;" suffix-icon="el-icon-search"></el-input>
+						</div>
+					</el-form-item>
+					<br />
+					<el-form-item label="车架号">
+						<el-input v-model="addLine.vin" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<el-form-item label="发动机号">
+						<el-input v-model="addLine.engine" placeholder="请输入" style="width: 300px;"></el-input>
+					</el-form-item>
+					<br />
+					<div style="height: 30px;"></div>
+					<el-button type="primary" size="mini" style="width: 100px;" @click="save('addLine')" v-loading.fullscreen.lock="saveLoading">保存</el-button>
+					<el-button plain size="mini" style="width: 100px;"  @click="list">取消</el-button>
+				</el-form>
+				
+			</div>
+				
+			<!-- 选择菜单 -->
+			<div id="oilLayer" style="display: none;padding:10px;">
+				<ul id="oilTree" class="ztree"></ul>
+			</div>	
+		</div>
+
+		<script src="../../js/modules/yunda/yfybvehicle.js"></script>
+	</body>
+</html>
+<style>
+	
+
+</style>

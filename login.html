@@ -1,0 +1,145 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width">
+		<title>平台登录</title>
+
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/login.css" rel="stylesheet">
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery.cookie.js"></script>
+		<script src="libs/vue.min.js"></script>
+	</head> 
+	<body style="background:#323943;">
+		<div class="login-box" id="login-box">
+			<div class="login-logo"></div>
+			<!-- <div>
+				
+				<img src="img/login/login-logo.png" width="70%" />
+			</div> -->
+			<form class="clearfix">
+				<div class="form-option">
+					<span class="line"></span><input type="text" class="text" id="username" placeholder="账号...">
+					<input type="password" class="text" id="password" placeholder="密码...">
+					<input type="text" class="text text-code" id="checkCode" maxlength="5" placeholder="验证码..." style="">
+					<div class="tipic-dialog"><img id="checkCodeImg" title="点击更换验证码" src="./平台登录_files/GetCheckCode" width="120px"></div>
+					<button type="button" class="login-btn buttons btn btn-primary btn-ghost btn-shine">登录</button>
+
+				</div>
+				<div class="error-info" style="display:none">
+					<p><span class="glyphicon glyphicon-exclamation-sign"></span></p>
+				</div>
+
+			</form>
+		</div>
+	</body>
+</html>
+<script>
+	
+	localStorage.removeItem("main-url");
+	var doms=document.getElementById("login-box").clientWidth;
+	var bodys=document.body.clientWidth;
+	// var lefts = (bodys - doms) / 2;
+	// document.getElementById("login-box").style.left=lefts+"px";
+	// var baseURL = "http://localhost:8080/";
+	var baseURL = "http://121.199.72.39:8080/";
+	var randomStr = "";
+	changeCheckCode();
+	// 验证码输入框点击事件
+	$('.text-code').focus(function() {
+		$('.tipic-dialog').fadeIn(300);
+	});
+
+	// 验证码点击事件
+	$('img').click(function() {
+		$('.text-code').focus();
+		changeCheckCode();
+	});
+
+	// 登录按钮点击事件
+	$('button').click(function() {
+		loginBtnClick();
+	});
+
+	// 输入框输入时的事件
+	$('input').keydown(function() {
+		$('.error-info').hide();
+		// checkBoxIcon();
+	});
+	
+	window.onload=function(){
+        
+        document.onkeydown=function(ev){
+            var event=ev ||event
+            if(event.keyCode==13){
+            	loginBtnClick();
+            }
+        }
+    }
+	
+	function loginBtnClick() {
+		var username = $.trim($('#username').val());
+		var password = $.trim($('#password').val());
+		var checkCode = $.trim($('#checkCode').val());
+
+		try {
+			checkInputValid(username, password, checkCode);
+			login(username, password, checkCode)
+
+		} catch (e) {
+			showErrorMsg(e.message);
+		}
+	}
+
+
+	function checkInputValid(username, password, checkCode) {
+		if (!username) {
+			$('#username').select();
+			throw new Error('请输入用户名');
+		}
+		if (!password) {
+			$('#password').select();
+			throw new Error('请输入密码');
+		}
+		if (!checkCode) {
+			$('#checkCode').select();
+			throw new Error('请输入验证码');
+		}
+	}
+
+	function login(username, password, checkCode){
+		var data = "username="+username+"&password="+password+"&captcha="+checkCode+"&randomStr="+randomStr;
+		$.ajax({
+		    type: "POST",
+		    url: baseURL + "sys/login",
+		    data: data,
+		    dataType: "json",
+		    success: function(r){
+		        if(r.code == 0){//登录成功
+				console.log(r)
+		        	localStorage.setItem("token", r.token);
+					localStorage.setItem("yd_user_info", JSON.stringify(r.user));
+					localStorage.setItem("yd_user_dept", JSON.stringify(r.dept));
+					
+		            parent.location.href ='index.html';
+		        }else{
+					showErrorMsg(r.msg);
+					changeCheckCode();
+		        }
+		    }
+		});
+	}
+
+	function showErrorMsg(msg) {
+		var icon = '<span class="glyphicon glyphicon-exclamation-sign"></span>';
+		if (msg)
+			$('.error-info p').html(icon + msg).parent().show();
+		else
+			$('.error-info').hide();
+	}
+
+	function changeCheckCode() {
+		randomStr = Math.floor(Math.random()*999999999);
+		$('#checkCodeImg').attr('src', baseURL + "/sys/code/"+randomStr);
+	}
+</script>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+		<link rel="stylesheet" href="../../css/bootstrap.min.css">
+		<link rel="stylesheet" href="../../css/main.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+		<link rel="stylesheet" href="../../plugins/elementUI/index.css" />
+		<!-- <script src="https://unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="../../libs/jquery.min.js"></script>
+		<script src="../../libs/vue.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../plugins/echarts/echarts.min.js"></script>
+		<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+		<script src="../../plugins/elementUI/index.js"></script>
+		<script src="../../js/common.js"></script>
+		<script src="../../plugins/layui/layui.js"></script>
+		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+	</head>
+	<body style="min-width: 1000px;">
+		<div id="app" v-cloak>
+<div style="margin-top: 20px;margin-left: 20px;">
+					<el-form :inline="true" :model="formInline" size="mini" class="demo-form-inline">
+				
+				
+						<el-form-item label="开始日期">
+						    
+						    <el-date-picker
+								size="mini"
+								v-model="formInline.time"
+								type="datetimerange"
+								align="right"
+								unlink-panels
+								range-separator="至"
+								start-placeholder="开始日期"
+								end-placeholder="结束日期"
+								:picker-options="pickerOptions">
+							</el-date-picker>
+						</el-form-item>
+				<br />
+						<el-form-item label="司机">
+							<template>
+							  <el-select v-model="userId" clearable placeholder="请选择">
+							    <el-option
+							      v-for="item in driverList"
+							      :key="item.userId"
+							      :label="item.username"
+							      :value="item.userId">
+							    </el-option>
+							  </el-select>
+							</template>
+						</el-form-item>
+						<el-form-item label="车牌号">
+							<template>
+							  <el-select v-model="lpn" clearable placeholder="请选择">
+							    <el-option
+							      v-for="item in carList"
+							      :key="item.lpn"
+							      :label="item.lpn"
+							      :value="item.lpn">
+							    </el-option>
+							  </el-select>
+							</template>
+						</el-form-item>
+				
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="query">查询</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="exportDetail">导出加油明细</el-button>
+						</el-form-item>
+						<!-- <el-form-item>
+							<el-button type="primary" size="mini" @click="exportData(1)">员工加油报表</el-button>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="exportData(0)">车辆加油报表</el-button>
+						</el-form-item> -->
+						<!-- <el-form-item>
+							<el-button type="primary" size="mini" @click="toOil">测试加油</el-button>
+						</el-form-item> -->
+					</el-form>
+				</div>
+			<div class="yd-nav-tabs-custom">
+				<div class="yd-nav-tabs" :class="{'yd-active':showList}" @click="list">
+					用油统计
+				</div>
+				<!-- <div class="yd-nav-tabs" :class="{'yd-active':!showList}" @click="add">
+					图表分析
+				</div> -->
+			</div>
+			<br />
+		<transition name="el-fade-in-linear">
+			<div v-show="showList">
+				<template>
+					<el-table v-loading="loading" :data="tableData" style="width: 100%" :summary-method="getSummaries" show-summary>
+						<el-table-column prop="stationName" label="加油站点" width="140"></el-table-column>
+						<el-table-column prop="operatorname" label="司机" width="140"></el-table-column>
+						<el-table-column prop="lpn" label="车牌号" width="140"></el-table-column>
+						<el-table-column prop="oilName" label="油品" width="120"> </el-table-column>
+						<el-table-column prop="qty" label="加油量" width="120"></el-table-column>
+						<el-table-column prop="trademoney" label="金额" width="120"></el-table-column>
+						<el-table-column prop="oiltime" label="加油时间" width="180"></el-table-column>
+
+						<!-- <el-table-column label="操作" width="150">
+							<template slot-scope="scope">
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">详情</el-button>
+								<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+								<el-button size="mini" type="danger">删除</el-button>
+							</template>
+						</el-table-column> -->
+					</el-table>
+				</template>
+				<div style="height: 40px;"></div>
+				<div class="page-footer">
+					<div style="">
+						<el-pagination class="page-footer-nav" :page-sizes="pageSizes" :current-page="currentPage" :page-size="pageSize"
+						 :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange">
+						</el-pagination>
+					</div>
+				</div>
+			</div>
+		</transition>
+			<div v-show="!showList" style="text-align: center;">
+				<div id="main"  style="width: 550px;height:350px;float:left;" >
+				
+				</div>
+				<div id="main2"  style="width: 550px;height:350px;float:left;" >
+				
+				</div>
+				<div id="main3"  style="width: 500px;height:350px;float:left;" >
+				
+				</div>
+				<div id="main4"  style="width: 500px;height:350px;float:left;" >
+				
+				</div>
+			
+			</div>
+		</div>
+
+		<script src="../../js/modules/yunda/consumerOilCount.js"></script>
+	</body>
+</html>
+<style>
+	.yd-nav-tabs-custom {
+		height: 43px;
+		line-height: 43px;
+		border: 1px solid #ddd;
+		background: linear-gradient(#fefefe, #f5f5f5);
+		border-radius: 4px;
+	}
+
+	.yd-nav-tabs {
+		float: left;
+		width: 100px;
+		text-align: center;
+	}
+
+	.yd-active {
+		line-height: 41px;
+		position: relative;
+		z-index: 1;
+		font-weight: bold;
+		background: linear-gradient(#f9f9f9, #eeefef);
+		border-right: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.yd-add-title {
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 16px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-content {
+		border-radius: 20px;
+		width: 80%;
+		margin: 10%;
+		height: 300px;
+		border: 1px solid #eee;
+		/* box-shadow: rgb(0, 0, 0) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px; */
+		background-color: #fafdff;
+		box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.04) 0px 0px 6px;
+	}
+
+	.yd-add-itme-label {
+		float: left;
+		width: 40%;
+		min-width: 60px;
+		text-align: right;
+		font-weight: 700;
+		vertical-align: middle;
+		font-size: 14px;
+		color: #606266;
+		-webkit-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.yd-add-itme-1 {
+		line-height: 50px;
+	}
+
+	.yd-add-form-1 {
+		margin-top: 100px;
+	}
+
+	.yd-add-itme-2 {
+		line-height: 50px;
+	}
+
+	.yd-add-itme-2 font {
+		width: 100px;
+	}
+
+	.yd-add-form-2 {
+		margin-top: 25px;
+	}
+
+	.page-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background-color: #FFFFFF;
+	}
+</style>
